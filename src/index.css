@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-neon: 154 240 79;
+    --color-purple: 150 85 245;
+  }
+
+  body {
+    @apply antialiased bg-[#08090C] text-slate-100 min-h-screen selection:bg-[#9AF04F] selection:text-[#090d04];
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    background-color: #08090C;
+    color: #F1F5F9;
+  }
+
+  /* Custom fintech scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #08090C;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1F2330;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9AF04F;
+  }
+}
+
+/* Glassmorphism & custom utility classes */
+.glass-panel {
+  background: rgba(17, 19, 27, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.neon-card {
+  background: #9AF04F;
+  color: #090D04;
+}
+
+.purple-card {
+  background: linear-gradient(135deg, #181126 0%, #251342 100%);
+  border: 1px solid rgba(150, 85, 245, 0.25);
+}
