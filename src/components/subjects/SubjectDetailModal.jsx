@@ -21,6 +21,8 @@ export function SubjectDetailModal({
   subject,
   onEdit,
   onDelete,
+  onOpenInternalCalc,
+  onOpenEndSemCalc,
 }) {
   if (!subject) return null;
 
@@ -76,16 +78,58 @@ export function SubjectDetailModal({
 
         {/* Assessment Component Breakdown */}
         <div className="p-4 rounded-2xl border border-white/[0.06] bg-[#141724] space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Assessment Breakdown
-          </h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Assessment Breakdown
+            </h4>
+            <div className="flex items-center gap-2">
+              {onOpenInternalCalc && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenInternalCalc(subject.id);
+                  }}
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] hover:bg-[#9AF04F]/25 transition-colors"
+                >
+                  ⚡ Calc Internals
+                </button>
+              )}
+              {onOpenEndSemCalc && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenEndSemCalc(subject.id);
+                  }}
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#9655F5]/20 text-[#C084FC] hover:bg-[#9655F5]/30 transition-colors"
+                >
+                  🎓 Calc End-Sem
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Internal (CIA) */}
           <div>
             <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-              <span className="text-slate-300">
-                Internal Assessment (CIA)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-300">
+                  Internal Assessment (CIA)
+                </span>
+                {onOpenInternalCalc && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenInternalCalc(subject.id);
+                    }}
+                    className="text-[10px] font-bold text-[#9AF04F] hover:underline flex items-center gap-0.5"
+                  >
+                    ⚡ Calc CAT & Attd
+                  </button>
+                )}
+              </div>
               <span className="text-white font-bold">
                 {subject.ciaMarks} / {subject.ciaMax}{' '}
                 <span className="text-slate-400 font-normal">
@@ -106,9 +150,23 @@ export function SubjectDetailModal({
           {/* External (ESE) */}
           <div>
             <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-              <span className="text-slate-300">
-                End-Semester Exam (ESE)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-300">
+                  End-Semester Exam (ESE)
+                </span>
+                {onOpenEndSemCalc && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenEndSemCalc(subject.id);
+                    }}
+                    className="text-[10px] font-bold text-[#9655F5] hover:underline flex items-center gap-0.5"
+                  >
+                    🎓 Scale & Cutoffs
+                  </button>
+                )}
+              </div>
               <span className="text-white font-bold">
                 {subject.eseMarks} / {subject.eseMax}{' '}
                 <span className="text-slate-400 font-normal">

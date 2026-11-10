@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   PAST_SEMESTERS: 'grademate_past_semesters_v1',
   EXAMS: 'grademate_exams_v1',
   ACTIVITIES: 'grademate_activities_v1',
+  INTERNAL_ASSESSMENTS: 'grademate_internal_assessments_v1',
+  END_SEM_ASSESSMENTS: 'grademate_end_sem_assessments_v1',
 };
 
 export const storageService = {

@@ -56,6 +56,14 @@ export function Dashboard() {
 
   const [addSubjectModalOpen, setAddSubjectModalOpen] = useState(false);
   const [calculatorModalOpen, setCalculatorModalOpen] = useState(false);
+  const [calculatorTab, setCalculatorTab] = useState('internal');
+  const [calculatorSubjectId, setCalculatorSubjectId] = useState(null);
+
+  const openCalculator = (tab = 'internal', subjectId = null) => {
+    setCalculatorTab(tab);
+    setCalculatorSubjectId(subjectId);
+    setCalculatorModalOpen(true);
+  };
 
   const { avgCIA, avgCIAPercentage } = calculateAverageCIA(semester5Subjects);
   const targetCredits = Number(settings.studentProfile.degreeCreditsTarget) || 160;
@@ -99,9 +107,9 @@ export function Dashboard() {
             variant="dark"
             size="sm"
             icon={Calculator}
-            onClick={() => setCalculatorModalOpen(true)}
+            onClick={() => openCalculator('internal')}
           >
-            Marks Calc
+            Internal Calc
           </Button>
           <Button
             variant="neon"
@@ -170,13 +178,13 @@ export function Dashboard() {
             <div className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setCalculatorModalOpen(true)}
+                onClick={() => openCalculator('internal')}
                 className="w-12 h-12 rounded-full bg-[#0A0D06] hover:bg-[#1C2030] text-[#9AF04F] flex items-center justify-center transition-all shadow-md active:scale-95"
-                title="Calculate Marks"
+                title="Internal Assessment Calculator"
               >
                 <Calculator className="w-5 h-5 stroke-[2.5]" />
               </button>
-              <span className="text-[11px] font-bold text-[#0A0D06]">Calc Marks</span>
+              <span className="text-[11px] font-bold text-[#0A0D06]">Internal Calc</span>
             </div>
 
             <div className="flex flex-col items-center gap-1.5">
@@ -234,65 +242,65 @@ export function Dashboard() {
 
           <button
             type="button"
-            onClick={() => setCalculatorModalOpen(true)}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9655F5]/40 transition-all flex items-center gap-3 group text-left"
+            onClick={() => openCalculator('internal')}
+            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9AF04F]/40 transition-all flex items-center gap-3 group text-left"
           >
-            <div className="w-10 h-10 rounded-full bg-[#9655F5] text-white flex items-center justify-center font-bold shrink-0 shadow-purple-glow group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] border border-[#9AF04F]/30 flex items-center justify-center font-bold shrink-0 shadow-neon-sm group-hover:scale-105 transition-transform">
               <Calculator className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#9655F5] transition-colors">
-                Grade Calc
+              <p className="text-xs font-bold text-white group-hover:text-[#9AF04F] transition-colors">
+                Internal Calc
               </p>
-              <p className="text-[10px] text-slate-400">Simulate Marks</p>
+              <p className="text-[10px] text-slate-400">CAT 1, 2 & Attd</p>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => navigate('/semester-5')}
+            onClick={() => openCalculator('endsem')}
+            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9655F5]/40 transition-all flex items-center gap-3 group text-left"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#9655F5] text-white flex items-center justify-center font-bold shrink-0 shadow-purple-glow group-hover:scale-105 transition-transform">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-[#9655F5] transition-colors">
+                End-Sem Calc
+              </p>
+              <p className="text-[10px] text-slate-400">Scale & Cutoffs</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => openCalculator('overall')}
+            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-sky-500/40 transition-all flex items-center gap-3 group text-left"
+          >
+            <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+              <Percent className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">
+                Grade Engine
+              </p>
+              <p className="text-[10px] text-slate-400">CIA + ESE Final</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/performance')}
             className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-emerald-500/40 transition-all flex items-center gap-3 group text-left"
           >
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
-              <BookOpen className="w-5 h-5" />
+              <TrendingUp className="w-5 h-5" />
             </div>
             <div>
               <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                Semester 5
+                SGPA Engine
               </p>
-              <p className="text-[10px] text-slate-400">Core 7 Courses</p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/minor')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-violet-500/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#EBDDFB] text-[#3B1768] flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#C084FC] transition-colors">
-                Minor Track
-              </p>
-              <p className="text-[10px] text-slate-400">IoT & Sensors</p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/elective')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-orange-500/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#FFE7D9] text-[#682D0F] flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#FFA07A] transition-colors">
-                Elective Track
-              </p>
-              <p className="text-[10px] text-slate-400">OS Security</p>
+              <p className="text-[10px] text-slate-400">Live Simulator</p>
             </div>
           </button>
         </div>
@@ -664,6 +672,8 @@ export function Dashboard() {
       <MarksCalculatorModal
         isOpen={calculatorModalOpen}
         onClose={() => setCalculatorModalOpen(false)}
+        initialTab={calculatorTab}
+        initialSubjectId={calculatorSubjectId}
       />
     </div>
   );

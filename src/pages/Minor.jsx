@@ -34,8 +34,16 @@ export function Minor() {
   const [editingSubject, setEditingSubject] = useState(null);
   const [viewingSubject, setViewingSubject] = useState(null);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calculatorTab, setCalculatorTab] = useState('internal');
+  const [calculatorSubjectId, setCalculatorSubjectId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const openCalculator = (tab = 'internal', subjectId = null) => {
+    setCalculatorTab(tab);
+    setCalculatorSubjectId(subjectId);
+    setCalculatorOpen(true);
+  };
 
   const filteredSubjects = minorSubjects.filter((s) => {
     const q = searchTerm.toLowerCase();
@@ -88,7 +96,7 @@ export function Minor() {
             variant="dark"
             size="sm"
             icon={Calculator}
-            onClick={() => setCalculatorOpen(true)}
+            onClick={() => openCalculator('internal')}
           >
             Marks Calc
           </Button>
@@ -205,6 +213,8 @@ export function Minor() {
               onViewDetails={(s) => setViewingSubject(s)}
               onEdit={(s) => handleOpenEdit(s)}
               onDelete={(id) => setDeleteConfirmId(id)}
+              onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
+              onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
             />
           ))}
         </div>
@@ -227,12 +237,16 @@ export function Minor() {
         subject={viewingSubject}
         onEdit={(s) => handleOpenEdit(s)}
         onDelete={(id) => setDeleteConfirmId(id)}
+        onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
+        onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
       />
 
       {/* Marks Calculator */}
       <MarksCalculatorModal
         isOpen={calculatorOpen}
         onClose={() => setCalculatorOpen(false)}
+        initialTab={calculatorTab}
+        initialSubjectId={calculatorSubjectId}
       />
 
       {/* Delete Dialog */}

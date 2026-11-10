@@ -158,3 +158,117 @@ export function findExtremeSubjects(subjects = []) {
   };
 }
 
+/**
+ * Calculate weighted marks for a single component:
+ * Weighted = (Obtained / Maximum) * Contribution
+ */
+export function calculateWeightedComponent(obtained, maximum, contribution) {
+  const obt = Number(obtained) || 0;
+  const max = Number(maximum) || 0;
+  const cont = Number(contribution) || 0;
+
+  if (max <= 0) return 0;
+  const score = (obt / max) * cont;
+  return Math.round(score * 100) / 100;
+}
+
+/**
+ * Calculate attendance percentage and marks based on marking scheme:
+ * - 'proportional': (percentage / 100) * contribution
+ * - 'slab': Standard university slabs (>=90: 100%, >=85: 80%, >=80: 60%, >=75: 40%, <75: 0)
+ * - 'direct': directly entered score
+ */
+export function calculateAttendanceEvaluation(attended, conducted, contribution, scheme = 'proportional', manualScore = null) {
+  const att = Math.max(0, Number(attended) || 0);
+  const cond = Math.max(0, Number(conducted) || 0);
+  const cont = Math.max(0, Number(contribution) || 0);
+
+  const percentage = cond > 0 ? Math.min(100, Math.round((att / cond) * 10000) / 100) : 0;
+  let marksObtained = 0;
+
+  if (scheme === 'direct' && manualScore !== null && manualScore !== undefined) {
+    marksObtained = Math.min(cont, Math.max(0, Number(manualScore) || 0));
+  } else if (scheme === 'slab') {
+    if (percentage >= 90) {
+      marksObtained = cont;
+    } else if (percentage >= 85) {
+      marksObtained = Math.round(cont * 0.8 * 100) / 100;
+    } else if (percentage >= 80) {
+      marksObtained = Math.round(cont * 0.6 * 100) / 100;
+    } else if (percentage >= 75) {
+      marksObtained = Math.round(cont * 0.4 * 100) / 100;
+    } else {
+      marksObtained = 0;
+    }
+  } else {
+    // Default proportional
+    marksObtained = Math.round(((percentage / 100) * cont) * 100) / 100;
+  }
+
+  marksObtained = Math.min(cont, Math.max(0, marksObtained));
+
+  return {
+    percentage,
+    marksObtained,
+    isShortage: percentage < 75 && cond > 0,
+    contribution: cont,
+  };
+}
+
+/**
+ * Calculate comprehensive internal assessment total from CAT1, CAT2, Attendance, and Additional components
+ */
+export function calculateInternalAssessmentBreakdown({
+  cat1 = { obtained: 0, max: 50, contribution: 7.5 },
+  cat2 = { obtained: 0, max: 50, contribution: 7.5 },
+  attendance = { attended: 0, conducted: 0, contribution: 5, scheme: 'proportional', manualScore: null },
+  components = []
+}) {
+  const cat1Weighted = calculateWeightedComponent(cat1.obtained, cat1.max, cat1.contribution);
+  const cat2Weighted = calculateWeightedComponent(cat2.obtained, cat2.max, cat2.contribution);
+  const combinedCatObtained = Math.round((cat1Weighted + cat2Weighted) * 100) / 100;
+  const combinedCatContribution = Math.round(((Number(cat1.contribution) || 0) + (Number(cat2.contribution) || 0)) * 100) / 100;
+
+  const attendanceResult = calculateAttendanceEvaluation(
+    attendance.attended,
+    attendance.conducted,
+    attendance.contribution,
+    attendance.scheme,
+    attendance.manualScore
+  );
+
+  let componentsObtained = 0;
+  let componentsContribution = 0;
+
+  const evaluatedComponents = components.map(c => {
+    const weighted = calculateWeightedComponent(c.obtained, c.max, c.contribution);
+    componentsObtained += weighted;
+    componentsContribution += Number(c.contribution) || 0;
+    return {
+      ...c,
+      weighted,
+    };
+  });
+
+  componentsObtained = Math.round(componentsObtained * 100) / 100;
+  componentsContribution = Math.round(componentsContribution * 100) / 100;
+
+  const totalObtained = Math.round((cat1Weighted + cat2Weighted + attendanceResult.marksObtained + componentsObtained) * 100) / 100;
+  const maxInternal = Math.round((Number(cat1.contribution || 0) + Number(cat2.contribution || 0) + Number(attendance.contribution || 0) + componentsContribution) * 100) / 100;
+
+  const internalPercentage = maxInternal > 0 ? Math.min(100, Math.round((totalObtained / maxInternal) * 10000) / 100) : 0;
+  const remainingMarks = Math.max(0, Math.round((maxInternal - totalObtained) * 100) / 100);
+
+  return {
+    cat1: { ...cat1, weighted: cat1Weighted },
+    cat2: { ...cat2, weighted: cat2Weighted },
+    combinedCat: { obtained: combinedCatObtained, contribution: combinedCatContribution },
+    attendance: { ...attendance, ...attendanceResult },
+    components: evaluatedComponents,
+    totalObtained,
+    maxInternal,
+    internalPercentage,
+    remainingMarks,
+  };
+}
+

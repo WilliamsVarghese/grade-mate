@@ -11,6 +11,9 @@ GradeMate is a modern, responsive, single-user academic performance dashboard de
 
 ## ✨ Features
 
+- **Dedicated Internal Assessment Calculator**: Independent calculation suite with configurable CAT 1, CAT 2 (purple accent), Attendance (conducted/attended/percentage/slab mode), and dynamic additional components (Assignments, Quizzes, Lab assessments) with live ledger summary.
+- **Independent End-Semester (ESE) Calculator**: Raw question paper score scaling (e.g. 100 to 50), university passing threshold cutoff check, and target grade simulator.
+- **Academic Marks & Grade Engine**: Configurable CIA/ESE weightages with real-time letter grade assignment and SGPA impact.
 - **Fintech Visual Design**: High-contrast near-black theme (`#08090C`), neon lime green (`#9AF04F`) primary highlights, and electric purple (`#9655F5`) analytics.
 - **Academic Balance Hero Card**: Displays Current CGPA, semester comparison, honours tracking, and quick action shortcuts.
 - **Semester 5 Regular Subjects**: Full CRUD for core curriculum subjects with internal assessment (CIA) and end-semester (ESE) tracking.
@@ -71,3 +74,4 @@ npm run preview
 ## 📄 License
 
 This project is licensed under the MIT License.
+

@@ -15,6 +15,8 @@ export function AcademicProvider({ children }) {
   const [pastSemesters, setPastSemesters] = useState(() => academicService.getPastSemesters());
   const [exams, setExams] = useState(() => academicService.getExams());
   const [activities, setActivities] = useState(() => academicService.getActivities());
+  const [internalAssessments, setInternalAssessments] = useState(() => academicService.getInternalAssessments());
+  const [endSemAssessments, setEndSemAssessments] = useState(() => academicService.getEndSemAssessments());
 
   // Save to storage whenever state changes
   useEffect(() => {
@@ -44,6 +46,14 @@ export function AcademicProvider({ children }) {
   useEffect(() => {
     academicService.saveActivities(activities);
   }, [activities]);
+
+  useEffect(() => {
+    academicService.saveInternalAssessments(internalAssessments);
+  }, [internalAssessments]);
+
+  useEffect(() => {
+    academicService.saveEndSemAssessments(endSemAssessments);
+  }, [endSemAssessments]);
 
   // Activity logger
   const logActivity = useCallback((action, details, type = 'general') => {
@@ -298,18 +308,91 @@ export function AcademicProvider({ children }) {
     });
   }, [pastSemesters, semester5SGPA]);
 
+  // Combined list of all registered subjects
+  const allSubjects = useMemo(() => {
+    return [
+      ...semester5Subjects.map(s => ({ ...s, category: 'Semester 5 Core' })),
+      ...minorSubjects.map(s => ({ ...s, category: 'Minor Track' })),
+      ...electiveSubjects.map(s => ({ ...s, category: 'Elective Track' })),
+    ];
+  }, [semester5Subjects, minorSubjects, electiveSubjects]);
+
+  // Subject-specific internal assessment configuration persistence and application
+  const saveSubjectInternalAssessment = useCallback((subjectId, config, applyToSubject = true) => {
+    setInternalAssessments(prev => ({
+      ...prev,
+      [subjectId]: config
+    }));
+
+    if (applyToSubject && subjectId && subjectId !== 'custom') {
+      const subject = allSubjects.find(s => s.id === subjectId);
+      if (subject) {
+        const updatePayload = {
+          ciaMarks: config.totalObtained,
+          ciaMax: config.maxInternal,
+          internalConfig: config
+        };
+        if (config.attendance && config.attendance.percentage !== undefined) {
+          updatePayload.attendance = config.attendance.percentage;
+        }
+
+        if (semester5Subjects.some(s => s.id === subjectId)) {
+          updateSemester5Subject(subjectId, updatePayload);
+        } else if (minorSubjects.some(s => s.id === subjectId)) {
+          updateMinorSubject(subjectId, updatePayload);
+        } else if (electiveSubjects.some(s => s.id === subjectId)) {
+          updateElectiveSubject(subjectId, updatePayload);
+        }
+        logActivity('Internal Assessment Saved', `Calculated ${config.totalObtained}/${config.maxInternal} CIA for ${subject.name}`, 'marks');
+      }
+    }
+  }, [allSubjects, semester5Subjects, minorSubjects, electiveSubjects, updateSemester5Subject, updateMinorSubject, updateElectiveSubject, logActivity]);
+
+  // Subject-specific end-semester assessment configuration persistence and application
+  const saveSubjectEndSemAssessment = useCallback((subjectId, config, applyToSubject = true) => {
+    setEndSemAssessments(prev => ({
+      ...prev,
+      [subjectId]: config
+    }));
+
+    if (applyToSubject && subjectId && subjectId !== 'custom') {
+      const subject = allSubjects.find(s => s.id === subjectId);
+      if (subject) {
+        const updatePayload = {
+          eseMarks: config.weightedEse,
+          eseMax: config.maxEse,
+          endSemConfig: config
+        };
+
+        if (semester5Subjects.some(s => s.id === subjectId)) {
+          updateSemester5Subject(subjectId, updatePayload);
+        } else if (minorSubjects.some(s => s.id === subjectId)) {
+          updateMinorSubject(subjectId, updatePayload);
+        } else if (electiveSubjects.some(s => s.id === subjectId)) {
+          updateElectiveSubject(subjectId, updatePayload);
+        }
+        logActivity('End-Sem Assessment Saved', `Updated ${config.weightedEse}/${config.maxEse} ESE for ${subject.name}`, 'marks');
+      }
+    }
+  }, [allSubjects, semester5Subjects, minorSubjects, electiveSubjects, updateSemester5Subject, updateMinorSubject, updateElectiveSubject, logActivity]);
+
   const value = {
     settings,
     semester5Subjects,
     minorSubjects,
     electiveSubjects,
+    allSubjects,
     pastSemesters,
     exams,
     activities,
+    internalAssessments,
+    endSemAssessments,
     semester5SGPA,
     minorPerformance,
     electivePerformance,
     cumulativeCGPA,
+    saveSubjectInternalAssessment,
+    saveSubjectEndSemAssessment,
     addSemester5Subject,
     updateSemester5Subject,
     deleteSemester5Subject,

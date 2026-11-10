@@ -15,6 +15,8 @@ export function SubjectCard({
   onViewDetails,
   onEdit,
   onDelete,
+  onOpenInternalCalc,
+  onOpenEndSemCalc,
 }) {
   const isLowAttendance = subject.attendance !== undefined && Number(subject.attendance) < 75;
 
@@ -119,13 +121,35 @@ export function SubjectCard({
 
       {/* Card Actions Footer */}
       <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => onViewDetails(subject)}
-          className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
-        >
-          <Eye className="w-3.5 h-3.5" /> Details
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => onViewDetails(subject)}
+            className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5" /> Details
+          </button>
+          {onOpenInternalCalc && (
+            <button
+              type="button"
+              onClick={() => onOpenInternalCalc(subject.id)}
+              className="text-[11px] font-bold text-[#9AF04F] hover:underline flex items-center gap-0.5 transition-colors"
+              title="Open Internal Assessment Calculator for this course"
+            >
+              ⚡ CIA
+            </button>
+          )}
+          {onOpenEndSemCalc && (
+            <button
+              type="button"
+              onClick={() => onOpenEndSemCalc(subject.id)}
+              className="text-[11px] font-bold text-[#9655F5] hover:underline flex items-center gap-0.5 transition-colors"
+              title="Open End-Semester Exam Calculator for this course"
+            >
+              🎓 ESE
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-1.5">
           <button

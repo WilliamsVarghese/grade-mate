@@ -73,6 +73,22 @@ export const academicService = {
     storageService.setItem(KEYS.ACTIVITIES, activities);
   },
 
+  // Internal Assessment Configurations per Subject
+  getInternalAssessments: () => {
+    return storageService.getItem(KEYS.INTERNAL_ASSESSMENTS, {});
+  },
+  saveInternalAssessments: (configs) => {
+    storageService.setItem(KEYS.INTERNAL_ASSESSMENTS, configs);
+  },
+
+  // End Semester Assessment Configurations per Subject
+  getEndSemAssessments: () => {
+    return storageService.getItem(KEYS.END_SEM_ASSESSMENTS, {});
+  },
+  saveEndSemAssessments: (configs) => {
+    storageService.setItem(KEYS.END_SEM_ASSESSMENTS, configs);
+  },
+
   // Reset to defaults
   resetToDefaults: () => {
     storageService.setItem(KEYS.SETTINGS, INITIAL_SETTINGS);

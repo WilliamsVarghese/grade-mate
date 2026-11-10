@@ -42,6 +42,7 @@ export function Layout() {
       <MarksCalculatorModal
         isOpen={calculatorOpen}
         onClose={() => setCalculatorOpen(false)}
+        initialTab="internal"
       />
 
       {/* Quick Add Subject Modal */}

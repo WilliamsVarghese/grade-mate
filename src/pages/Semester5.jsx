@@ -31,7 +31,15 @@ export function Semester5() {
   const [editingSubject, setEditingSubject] = useState(null);
   const [viewingSubject, setViewingSubject] = useState(null);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calculatorTab, setCalculatorTab] = useState('internal');
+  const [calculatorSubjectId, setCalculatorSubjectId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+  const openCalculator = (tab = 'internal', subjectId = null) => {
+    setCalculatorTab(tab);
+    setCalculatorSubjectId(subjectId);
+    setCalculatorOpen(true);
+  };
 
   const filteredSubjects = useMemo(() => {
     return semester5Subjects.filter((s) => {
@@ -86,7 +94,7 @@ export function Semester5() {
             variant="dark"
             size="sm"
             icon={Calculator}
-            onClick={() => setCalculatorOpen(true)}
+            onClick={() => openCalculator('internal')}
           >
             Marks Calc
           </Button>
@@ -181,6 +189,8 @@ export function Semester5() {
               onViewDetails={(s) => setViewingSubject(s)}
               onEdit={(s) => handleOpenEdit(s)}
               onDelete={(id) => setDeleteConfirmId(id)}
+              onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
+              onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
             />
           ))}
         </div>
@@ -202,12 +212,16 @@ export function Semester5() {
         subject={viewingSubject}
         onEdit={(s) => handleOpenEdit(s)}
         onDelete={(id) => setDeleteConfirmId(id)}
+        onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
+        onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
       />
 
       {/* Marks Calculator Modal */}
       <MarksCalculatorModal
         isOpen={calculatorOpen}
         onClose={() => setCalculatorOpen(false)}
+        initialTab={calculatorTab}
+        initialSubjectId={calculatorSubjectId}
       />
 
       {/* Delete Confirmation Dialog */}
