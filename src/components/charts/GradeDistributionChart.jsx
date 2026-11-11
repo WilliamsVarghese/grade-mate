@@ -13,12 +13,12 @@ import { Card } from '../common/Card';
 import { useAcademic } from '../../context/AcademicContext';
 
 export function GradeDistributionChart({ height = 240 }) {
-  const { semester5Subjects, minorSubjects, electiveSubjects } = useAcademic();
+  const { allSubjects } = useAcademic();
 
-  const allSubjects = [...semester5Subjects, ...minorSubjects, ...electiveSubjects];
+  const evaluatedSubjects = allSubjects.filter(s => s.grade && s.grade !== 'F' && s.grade !== 'N/A' && s.percentage > 0);
 
   const counts = {};
-  allSubjects.forEach((s) => {
+  evaluatedSubjects.forEach((s) => {
     const g = (s.grade || 'N/A').toUpperCase();
     counts[g] = (counts[g] || 0) + 1;
   });

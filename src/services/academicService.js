@@ -1,6 +1,7 @@
 import { storageService } from './storageService';
 import {
   INITIAL_SETTINGS,
+  INITIAL_SEMESTERS_DATA,
   INITIAL_SEMESTER_5_SUBJECTS,
   INITIAL_MINOR_SUBJECTS,
   INITIAL_ELECTIVE_SUBJECTS,
@@ -25,12 +26,48 @@ export const academicService = {
     storageService.setItem(KEYS.SETTINGS, settings);
   },
 
-  // Semester 5 Regular Subjects
+  // Active Selected Semester ID
+  getSelectedSemesterId: () => {
+    return storageService.getItem(KEYS.SELECTED_SEMESTER, 'sem-5');
+  },
+  saveSelectedSemesterId: (semesterId) => {
+    storageService.setItem(KEYS.SELECTED_SEMESTER, semesterId);
+  },
+
+  // All 8 Semesters Subjects Data
+  getSemestersData: () => {
+    const saved = storageService.getItem(KEYS.SEMESTERS_DATA, null);
+    if (saved && typeof saved === 'object') {
+      return saved;
+    }
+
+    // Preservation migration: if user previously had Semester 5 subjects saved, preserve them
+    const existingSem5 = storageService.getItem(KEYS.SEMESTER_5, null);
+    const initial = { ...INITIAL_SEMESTERS_DATA };
+    if (existingSem5 && Array.isArray(existingSem5) && existingSem5.length > 0) {
+      initial['sem-5'] = existingSem5;
+    }
+
+    storageService.setItem(KEYS.SEMESTERS_DATA, initial);
+    return initial;
+  },
+  saveSemestersData: (data) => {
+    storageService.setItem(KEYS.SEMESTERS_DATA, data);
+    // Backward compatibility: keep SEMESTER_5 key in sync
+    if (data && data['sem-5']) {
+      storageService.setItem(KEYS.SEMESTER_5, data['sem-5']);
+    }
+  },
+
+  // Semester 5 Regular Subjects (legacy wrapper)
   getSemester5Subjects: () => {
-    return storageService.getItem(KEYS.SEMESTER_5, INITIAL_SEMESTER_5_SUBJECTS);
+    const all = academicService.getSemestersData();
+    return all['sem-5'] || storageService.getItem(KEYS.SEMESTER_5, INITIAL_SEMESTER_5_SUBJECTS);
   },
   saveSemester5Subjects: (subjects) => {
-    storageService.setItem(KEYS.SEMESTER_5, subjects);
+    const all = academicService.getSemestersData();
+    all['sem-5'] = subjects;
+    academicService.saveSemestersData(all);
   },
 
   // Minor Subjects (IoT & Sensors)
@@ -92,6 +129,8 @@ export const academicService = {
   // Reset to defaults
   resetToDefaults: () => {
     storageService.setItem(KEYS.SETTINGS, INITIAL_SETTINGS);
+    storageService.setItem(KEYS.SELECTED_SEMESTER, 'sem-5');
+    storageService.setItem(KEYS.SEMESTERS_DATA, INITIAL_SEMESTERS_DATA);
     storageService.setItem(KEYS.SEMESTER_5, INITIAL_SEMESTER_5_SUBJECTS);
     storageService.setItem(KEYS.MINOR, INITIAL_MINOR_SUBJECTS);
     storageService.setItem(KEYS.ELECTIVE, INITIAL_ELECTIVE_SUBJECTS);
@@ -105,4 +144,3 @@ export const academicService = {
     storageService.clearAll();
   }
 };
-

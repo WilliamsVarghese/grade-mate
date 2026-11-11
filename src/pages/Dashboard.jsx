@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  GraduationCap,
+  TrendingUp,
   Award,
   BookOpen,
-  TrendingUp,
-  Percent,
-  Plus,
-  Calculator,
   Calendar,
-  AlertCircle,
-  FileCheck,
+  AlertTriangle,
+  Plus,
   ArrowUpRight,
+  Calculator,
+  Percent,
+  CheckCircle2,
+  GraduationCap,
   Sparkles,
   Cpu,
   ShieldCheck,
@@ -19,7 +19,8 @@ import {
   Clock,
   Layers,
   ChevronRight,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { useAcademic } from '../context/AcademicContext';
 import { Card } from '../components/common/Card';
@@ -42,14 +43,18 @@ import {
 export function Dashboard() {
   const navigate = useNavigate();
   const {
-    semester5Subjects,
+    semesters,
+    selectedSemesterId,
+    selectedSemester,
+    setSelectedSemesterId,
+    currentSemesterSubjects,
+    currentSemesterSGPA,
+    allSemestersSGPA,
+    addSubject,
     minorSubjects,
     electiveSubjects,
-    pastSemesters,
-    semester5SGPA,
     cumulativeCGPA,
     activities,
-    addSemester5Subject,
     settings,
     exportDataJSON,
   } = useAcademic();
@@ -65,27 +70,27 @@ export function Dashboard() {
     setCalculatorModalOpen(true);
   };
 
-  const { avgCIA, avgCIAPercentage } = calculateAverageCIA(semester5Subjects);
+  const { avgCIA, avgCIAPercentage } = calculateAverageCIA(currentSemesterSubjects);
   const targetCredits = Number(settings.studentProfile.degreeCreditsTarget) || 160;
-  const completedCredits = cumulativeCGPA.totalCompletedCredits || 107;
+  const completedCredits = cumulativeCGPA.totalCompletedCredits || 0;
   const creditsPercentage = Math.min(100, Math.round((completedCredits / targetCredits) * 100));
 
-  // Analytics chart data
-  const trendData = [
-    ...pastSemesters.map((s, idx) => ({
-      name: `Sem ${idx + 1}`,
-      sgpa: Number(s.sgpa) || 0,
-    })),
-    {
-      name: 'Sem 5',
-      sgpa: Number(semester5SGPA.sgpa) || 0,
-      isCurrent: true,
-    },
-  ];
+  // Analytics chart data across all 8 semesters
+  const trendData = allSemestersSGPA.map((s) => ({
+    name: s.shortName,
+    fullName: s.name,
+    sgpa: s.isEvaluated ? Number(s.sgpa) : null,
+    isCurrent: s.id === selectedSemesterId,
+  }));
+
+  // Detect labs for the active semester
+  const labCourses = currentSemesterSubjects.filter(s =>
+    (s.name || '').toLowerCase().includes('lab') || (s.code || '').toLowerCase().includes('lab')
+  );
 
   return (
-    <div className="space-y-8">
-      {/* Top Greeting & Academic Chip */}
+    <div className="space-y-6 sm:space-y-8">
+      {/* Top Greeting & Academic Institution Chip */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -98,7 +103,7 @@ export function Dashboard() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Hi, {settings.studentProfile.name}
+            Hi, {settings.studentProfile.name} • <span className="text-[#9AF04F]">{selectedSemester.name}</span>
           </h1>
         </div>
 
@@ -117,12 +122,40 @@ export function Dashboard() {
             icon={Plus}
             onClick={() => setAddSubjectModalOpen(true)}
           >
-            Add Subject
+            Add Course
           </Button>
         </div>
       </div>
 
-      {/* 1. HERO CARD: Account Balance → Current CGPA */}
+      {/* QUICK SEMESTER SWITCHER PILL BAR */}
+      <div className="p-1.5 rounded-2xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex items-center gap-1 overflow-x-auto custom-scrollbar">
+        {semesters.map((sem) => {
+          const isActive = sem.id === selectedSemesterId;
+          const semMetric = allSemestersSGPA.find(s => s.id === sem.id);
+          return (
+            <button
+              key={sem.id}
+              type="button"
+              onClick={() => setSelectedSemesterId(sem.id)}
+              className={`flex-1 min-w-[95px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
+                isActive
+                  ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>{sem.name}</span>
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#0A0D06]" />}
+              </div>
+              <span className={`text-[10px] font-mono ${isActive ? 'text-[#0A0D06]/80' : 'text-slate-500'}`}>
+                {semMetric?.isEvaluated ? `${semMetric.sgpa} SGPA` : `${semMetric?.subjectsCount || 0} courses`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 1. HERO CARD: Account Balance → Current CGPA & Active Semester SGPA */}
       <div className="relative rounded-3xl bg-[#9AF04F] text-[#0A0D06] p-6 sm:p-8 shadow-neon-glow overflow-hidden">
         {/* Subtle decorative curved background overlay */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/20 blur-2xl pointer-events-none" />
@@ -132,43 +165,49 @@ export function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-xs font-black uppercase tracking-wider text-[#0A0D06]/80 px-3 py-1 rounded-full bg-black/10">
-                Academic Balance • Current CGPA
+                Academic Standing • Cumulative CGPA
               </span>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-black text-[#9AF04F] inline-flex items-center gap-1 shadow-sm">
-                <ArrowUpRight className="w-3.5 h-3.5" /> +0.14 vs Sem 4
+                <Sparkles className="w-3.5 h-3.5" /> {selectedSemester.name} Active
               </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/40 text-[#0A0D06]">
-                Honours Candidate
-              </span>
+              {cumulativeCGPA.isIncomplete ? (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-900/20 text-amber-900 border border-amber-900/30 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Data Incomplete: {cumulativeCGPA.missingPriorSemesters.join(', ')} pending
+                </span>
+              ) : (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/40 text-[#0A0D06]">
+                  Honours Candidate ({cumulativeCGPA.evaluatedSemestersCount} Semesters Evaluated)
+                </span>
+              )}
             </div>
 
             {/* Giant CGPA Display */}
             <div className="flex items-baseline gap-3">
               <span className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-[#0A0D06] leading-none">
-                {cumulativeCGPA.cgpa}
+                {cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}
               </span>
               <span className="text-xl sm:text-2xl font-bold text-[#0A0D06]/60">
-                / 10.0
+                / 10.0 CGPA
               </span>
             </div>
 
             <div className="flex items-center gap-4 text-xs sm:text-sm font-semibold text-[#0A0D06]/80 flex-wrap">
-              <span>Semester 5 SGPA: <strong>{semester5SGPA.sgpa}</strong></span>
+              <span>{selectedSemester.name} SGPA: <strong>{currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : 'Awaiting Marks'}</strong></span>
               <span>•</span>
-              <span>Credits: <strong>{completedCredits} / {targetCredits}</strong> ({creditsPercentage}%)</span>
+              <span>Semester Credits: <strong>{currentSemesterSGPA.totalCredits}</strong></span>
               <span>•</span>
-              <span>Scale: <strong>Autonomous 10-Point</strong></span>
+              <span>Total Earned: <strong>{completedCredits} / {targetCredits} Credits</strong> ({creditsPercentage}%)</span>
             </div>
           </div>
 
-          {/* Quick Circular Action Buttons on Hero Card */}
-          <div className="flex items-center gap-3">
+          {/* Quick Transfers / Actions on Hero */}
+          <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
             <div className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setAddSubjectModalOpen(true)}
                 className="w-12 h-12 rounded-full bg-[#0A0D06] hover:bg-[#1C2030] text-[#9AF04F] flex items-center justify-center transition-all shadow-md active:scale-95"
-                title="Add Course"
+                title={`Add Course to ${selectedSemester.name}`}
               >
                 <Plus className="w-5 h-5 stroke-[2.5]" />
               </button>
@@ -204,7 +243,7 @@ export function Dashboard() {
                 type="button"
                 onClick={exportDataJSON}
                 className="w-12 h-12 rounded-full bg-[#0A0D06] hover:bg-[#1C2030] text-[#9AF04F] flex items-center justify-center transition-all shadow-md active:scale-95"
-                title="Export Data"
+                title="Export 8-Semester Data Backup"
               >
                 <Download className="w-5 h-5 stroke-[2.5]" />
               </button>
@@ -214,104 +253,65 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 2. QUICK TRANSFERS → QUICK ACADEMIC ACTIONS */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Quick Actions
-          </span>
-          <span className="text-xs text-slate-500">Shortcuts & Tools</span>
+      {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-[#9AF04F]/40 transition-all text-left">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+            {selectedSemester.name} SGPA
+          </p>
+          <p className="text-2xl font-black text-[#9AF04F] mt-1">
+            {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'}
+            <span className="text-xs font-bold text-slate-500"> / 10</span>
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <button
-            type="button"
-            onClick={() => setAddSubjectModalOpen(true)}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9AF04F]/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#9AF04F] text-[#0A0D06] flex items-center justify-center font-bold shrink-0 shadow-neon-sm group-hover:scale-105 transition-transform">
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#9AF04F] transition-colors">
-                Add Course
-              </p>
-              <p className="text-[10px] text-slate-400">Regular / Minor</p>
-            </div>
-          </button>
+        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+            Cumulative CGPA
+          </p>
+          <p className="text-2xl font-black text-white mt-1">
+            {cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}
+            <span className="text-xs font-bold text-slate-500"> / 10</span>
+          </p>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => openCalculator('internal')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9AF04F]/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] border border-[#9AF04F]/30 flex items-center justify-center font-bold shrink-0 shadow-neon-sm group-hover:scale-105 transition-transform">
-              <Calculator className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#9AF04F] transition-colors">
-                Internal Calc
-              </p>
-              <p className="text-[10px] text-slate-400">CAT 1, 2 & Attd</p>
-            </div>
-          </button>
+        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+            {selectedSemester.shortName} Credits
+          </p>
+          <p className="text-2xl font-black text-white mt-1">
+            {currentSemesterSGPA.totalCredits}
+            <span className="text-xs font-normal text-slate-400"> Credits</span>
+          </p>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => openCalculator('endsem')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-[#9655F5]/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#9655F5] text-white flex items-center justify-center font-bold shrink-0 shadow-purple-glow group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-[#9655F5] transition-colors">
-                End-Sem Calc
-              </p>
-              <p className="text-[10px] text-slate-400">Scale & Cutoffs</p>
-            </div>
-          </button>
+        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+            Enrolled Subjects
+          </p>
+          <p className="text-2xl font-black text-white mt-1">
+            {currentSemesterSubjects.length}
+            <span className="text-xs font-normal text-slate-400"> Courses</span>
+          </p>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => openCalculator('overall')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-sky-500/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
-              <Percent className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">
-                Grade Engine
-              </p>
-              <p className="text-[10px] text-slate-400">CIA + ESE Final</p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/performance')}
-            className="p-4 rounded-2xl bg-[#11131B] hover:bg-[#161924] border border-white/[0.06] hover:border-emerald-500/40 transition-all flex items-center gap-3 group text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                SGPA Engine
-              </p>
-              <p className="text-[10px] text-slate-400">Live Simulator</p>
-            </div>
-          </button>
+        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+            Average CIA Score
+          </p>
+          <p className="text-2xl font-black text-[#9655F5] mt-1">
+            {avgCIA > 0 ? avgCIA : '—'}
+            <span className="text-xs font-normal text-slate-400"> / 50</span>
+          </p>
         </div>
       </div>
 
-      {/* 3. EXPENSE CATEGORIES → SUBJECT CATEGORIES (Colourful Pastel Cards) */}
+      {/* 3. SUBJECT CATEGORIES (Colourful Pastel Cards) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-              Subject Categories & Streams
+              Curriculum Streams for {selectedSemester.name}
             </h2>
             <p className="text-xs text-slate-500">
               Categorized course streams with dedicated credit and performance metrics
@@ -320,7 +320,7 @@ export function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Pastel Mint Card: Semester 5 Regular Core */}
+          {/* Pastel Mint Card: Current Semester Regular Core */}
           <div
             onClick={() => navigate('/semester-5')}
             className="p-5 rounded-3xl bg-[#D8F7E0] text-[#0F4725] cursor-pointer hover:shadow-lg transition-all group relative overflow-hidden"
@@ -330,19 +330,19 @@ export function Dashboard() {
                 <BookOpen className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/60 text-[#0F4725]">
-                {semester5Subjects.length} Courses
+                {currentSemesterSubjects.length} Courses
               </span>
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wider opacity-80 block">
               Core Degree
             </span>
             <h3 className="text-lg font-black tracking-tight mt-0.5">
-              Semester 5 Core
+              {selectedSemester.name} Core
             </h3>
             <div className="mt-4 pt-3 border-t border-[#0F4725]/15 flex items-center justify-between text-xs font-bold">
-              <span>{semester5SGPA.totalCredits} Credits</span>
+              <span>{currentSemesterSGPA.totalCredits} Credits</span>
               <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                SGPA {semester5SGPA.sgpa} <ChevronRight className="w-4 h-4" />
+                SGPA {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'} <ChevronRight className="w-4 h-4" />
               </span>
             </div>
           </div>
@@ -411,19 +411,19 @@ export function Dashboard() {
                 <Layers className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/60 text-[#103F64]">
-                2 Labs
+                {labCourses.length} Labs
               </span>
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wider opacity-80 block">
               Practicals
             </span>
             <h3 className="text-lg font-black tracking-tight mt-0.5">
-              ML & Net Labs
+              {selectedSemester.shortName} Practicals
             </h3>
             <div className="mt-4 pt-3 border-t border-[#103F64]/15 flex items-center justify-between text-xs font-bold">
-              <span>4 Credits</span>
+              <span>{labCourses.reduce((sum, c) => sum + (Number(c.credits) || 0), 0)} Credits</span>
               <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                Avg 95% <ChevronRight className="w-4 h-4" />
+                {labCourses.length > 0 ? 'Enrolled' : 'No Labs'} <ChevronRight className="w-4 h-4" />
               </span>
             </div>
           </div>
@@ -439,10 +439,10 @@ export function Dashboard() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#C084FC]">
-                    Analytics
+                    8-Semester Trajectory
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-[#9655F5]/20 text-[#C084FC] text-[10px] font-bold">
-                    SGPA Trajectory
+                    {selectedSemester.name} Highlighted
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-white mt-0.5">
@@ -452,9 +452,9 @@ export function Dashboard() {
 
               <div className="text-right">
                 <span className="text-2xl font-black text-[#9AF04F]">
-                  {semester5SGPA.sgpa}
+                  {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'}
                 </span>
-                <span className="text-xs text-slate-400 block font-semibold">Active SGPA</span>
+                <span className="text-xs text-slate-400 block font-semibold">{selectedSemester.shortName} SGPA</span>
               </div>
             </div>
 
@@ -470,7 +470,7 @@ export function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2B1A48" vertical={false} />
                   <XAxis dataKey="name" stroke="#A78BFA" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis domain={[7, 10]} stroke="#A78BFA" fontSize={11} tickLine={false} axisLine={false} ticks={[7, 8, 9, 10]} />
+                  <YAxis domain={[6, 10]} stroke="#A78BFA" fontSize={11} tickLine={false} axisLine={false} ticks={[6, 7, 8, 9, 10]} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#160E27',
@@ -479,7 +479,7 @@ export function Dashboard() {
                       color: '#ffffff',
                       fontSize: '12px',
                     }}
-                    formatter={(val) => [`${val} / 10`, 'SGPA']}
+                    formatter={(val, name, item) => [`${val || 'Pending'} / 10`, item.payload.fullName]}
                   />
                   <Area
                     type="monotone"
@@ -497,7 +497,7 @@ export function Dashboard() {
 
           <div className="pt-4 border-t border-[#9655F5]/20 flex items-center justify-between text-xs text-slate-300">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#9655F5]" /> Cumulative CGPA: <strong className="text-white">{cumulativeCGPA.cgpa}</strong>
+              <span className="w-2 h-2 rounded-full bg-[#9AF04F]" /> Cumulative CGPA: <strong className="text-white">{cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}</strong>
             </span>
             <button
               type="button"
@@ -519,13 +519,13 @@ export function Dashboard() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">
-                    Academic Targets
+                    Degree Milestones
                   </h3>
-                  <p className="text-[11px] text-slate-400">Goals & milestones</p>
+                  <p className="text-[11px] text-slate-400">B.Tech CSE progress</p>
                 </div>
               </div>
               <Badge color="neonOutline" size="xs">
-                In Progress
+                {selectedSemester.shortName} Term
               </Badge>
             </div>
 
@@ -543,7 +543,7 @@ export function Dashboard() {
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
-                  <span>Earned: <strong>{completedCredits}</strong></span>
+                  <span>Completed: <strong>{completedCredits}</strong></span>
                   <span>Target: <strong>{targetCredits} Credits</strong></span>
                 </div>
               </div>
@@ -553,33 +553,40 @@ export function Dashboard() {
                 <div className="flex items-center justify-between text-xs mb-1.5">
                   <span className="font-semibold text-white">Target CGPA (Honours)</span>
                   <span className="font-bold text-[#9655F5]">
-                    {Math.round((cumulativeCGPA.cgpa / 9.0) * 100)}%
+                    {cumulativeCGPA.cgpa > 0 ? Math.round((cumulativeCGPA.cgpa / 9.0) * 100) : 0}%
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-[#9655F5] to-[#9AF04F] shadow-purple-glow transition-all duration-500"
-                    style={{ width: `${Math.min(100, (cumulativeCGPA.cgpa / 9.0) * 100)}%` }}
+                    style={{ width: `${Math.min(100, ((cumulativeCGPA.cgpa || 0) / 9.0) * 100)}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
-                  <span>Current: <strong>{cumulativeCGPA.cgpa}</strong></span>
+                  <span>Current: <strong>{cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}</strong></span>
                   <span>Goal: <strong>9.00 CGPA</strong></span>
                 </div>
               </div>
 
-              {/* Target 3: Mandatory Attendance ≥ 75% */}
+              {/* Target 3: Evaluated Semesters */}
               <div className="p-3.5 rounded-2xl bg-[#161824] border border-white/[0.05]">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-semibold text-white">Average Attendance</span>
-                  <span className="font-bold text-emerald-400">93%</span>
+                  <span className="font-semibold text-white">Semesters Evaluated</span>
+                  <span className="font-bold text-emerald-400">
+                    {cumulativeCGPA.evaluatedSemestersCount} / 8 Semesters
+                  </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
-                  <div className="h-full rounded-full bg-emerald-400 transition-all duration-500" style={{ width: '93%' }} />
+                  <div
+                    className="h-full rounded-full bg-emerald-400 transition-all duration-500"
+                    style={{ width: `${Math.round((cumulativeCGPA.evaluatedSemestersCount / 8) * 100)}%` }}
+                  />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
-                  <span>Threshold: 75%</span>
-                  <span className="text-emerald-400 font-bold">Safely Above</span>
+                  <span>Status:</span>
+                  <span className={`font-bold ${cumulativeCGPA.isIncomplete ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {cumulativeCGPA.isIncomplete ? 'Previous Semesters Pending' : 'Continuous Record'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -587,71 +594,95 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 5. TRANSACTIONS → RECENT MARKS & ACADEMIC ACTIVITY */}
+      {/* 5. DYNAMIC SUBJECTS LIST FOR ACTIVE SEMESTER */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Marks Stream (styled like fintech transaction history) */}
+        {/* Active Semester Subjects */}
         <div className="lg:col-span-2 rounded-3xl bg-[#11131B] border border-white/[0.07] p-6 shadow-card-dark">
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-4">
             <div>
-              <h3 className="text-base font-bold text-white">
-                Recent Marks & Evaluations
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#9AF04F]" />
+                {selectedSemester.name} Subjects & Marks
               </h3>
               <p className="text-xs text-slate-400">
-                Latest internal continuous assessments and university test recordings
+                Curriculum courses, internal assessments, and end-sem evaluations
               </p>
             </div>
-            <Badge color="neonOutline" size="xs">
-              Live Feed
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge color="neonOutline" size="xs">
+                {currentSemesterSubjects.length} Courses
+              </Badge>
+              <button
+                type="button"
+                onClick={() => navigate('/semester-5')}
+                className="text-xs font-bold text-[#9AF04F] hover:underline hidden sm:inline"
+              >
+                Manage All →
+              </button>
+            </div>
           </div>
 
-          <div className="divide-y divide-white/[0.04]">
-            {semester5Subjects.slice(0, 5).map((sub, idx) => {
-              const pastelVariants = [
-                'bg-[#D8F7E0] text-[#0F4725]',
-                'bg-[#EBDDFB] text-[#3B1768]',
-                'bg-[#FFE7D9] text-[#682D0F]',
-                'bg-[#DCF1FF] text-[#103F64]',
-                'bg-[#FFF3CD] text-[#594406]',
-              ];
-              const pastelStyle = pastelVariants[idx % pastelVariants.length];
+          {currentSemesterSubjects.length === 0 ? (
+            <div className="py-12 text-center text-slate-500">
+              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-bold text-white">No courses recorded for {selectedSemester.name}</p>
+              <p className="text-xs text-slate-400 mt-1 mb-4">Add your courses to track credits, internal marks, and SGPA.</p>
+              <Button variant="neon" size="sm" icon={Plus} onClick={() => setAddSubjectModalOpen(true)}>
+                Add Course to {selectedSemester.name}
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/[0.04]">
+              {currentSemesterSubjects.slice(0, 6).map((sub, idx) => {
+                const pastelVariants = [
+                  'bg-[#D8F7E0] text-[#0F4725]',
+                  'bg-[#EBDDFB] text-[#3B1768]',
+                  'bg-[#FFE7D9] text-[#682D0F]',
+                  'bg-[#DCF1FF] text-[#103F64]',
+                  'bg-[#FFF3CD] text-[#594406]',
+                ];
+                const pastelStyle = pastelVariants[idx % pastelVariants.length];
 
-              return (
-                <div
-                  key={sub.id}
-                  className="py-3.5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors rounded-xl px-2"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${pastelStyle}`}>
-                      {sub.code ? sub.code.slice(0, 2) : 'CS'}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-white truncate">
-                          {sub.name}
-                        </p>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-400">
-                          {sub.code}
-                        </span>
+                return (
+                  <div
+                    key={sub.id}
+                    className="py-3.5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors rounded-xl px-2"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${pastelStyle}`}>
+                        {sub.code ? sub.code.slice(0, 3) : 'CS'}
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Internal Assessment CIA: {sub.ciaMarks}/{sub.ciaMax} • ESE: {sub.eseMarks}/{sub.eseMax}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-white truncate">
+                            {sub.name}
+                          </p>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-400">
+                            {sub.code || 'NO-CODE'}
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-400">
+                            {sub.credits} Credits
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          CIA: {sub.ciaMarks ?? 0}/{sub.ciaMax ?? 50} • ESE: {sub.eseMarks ?? 0}/{sub.eseMax ?? 50}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-sm sm:text-base font-black text-[#9AF04F] block">
+                        +{sub.totalMarks ?? 0} <span className="text-xs font-normal text-slate-400">/ {sub.maxMarks ?? 100}</span>
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-300">
+                        Grade: <span className="text-[#9AF04F]">{sub.grade || '—'}</span> ({sub.gradePoint ?? 0} GP)
+                      </span>
                     </div>
                   </div>
-
-                  <div className="text-right shrink-0">
-                    <span className="text-sm sm:text-base font-black text-[#9AF04F] block">
-                      +{sub.totalMarks} <span className="text-xs font-normal text-slate-400">/ {sub.maxMarks}</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-300">
-                      Grade: <span className="text-[#9AF04F]">{sub.grade}</span> ({sub.gradePoint} GP)
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Upcoming Examination Schedule */}
@@ -664,8 +695,8 @@ export function Dashboard() {
       <SubjectModal
         isOpen={addSubjectModalOpen}
         onClose={() => setAddSubjectModalOpen(false)}
-        onSave={addSemester5Subject}
-        sectionTitle="Semester 5 Regular Subject"
+        onSave={(data) => addSubject(data, selectedSemesterId)}
+        sectionTitle={`${selectedSemester.name} Subject`}
       />
 
       {/* Marks Calculator Modal */}

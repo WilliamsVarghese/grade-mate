@@ -15,7 +15,14 @@ import {
 import { useAcademic } from '../../context/AcademicContext';
 
 export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
-  const { semester5Subjects, minorSubjects, electiveSubjects, cumulativeCGPA, settings } = useAcademic();
+  const {
+    selectedSemester,
+    currentSemesterSubjects,
+    minorSubjects,
+    electiveSubjects,
+    cumulativeCGPA,
+    settings,
+  } = useAcademic();
 
   const navItems = [
     {
@@ -26,9 +33,9 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
     },
     {
       to: '/semester-5',
-      label: 'Semester 5',
+      label: selectedSemester.name,
       icon: BookOpen,
-      badge: `${semester5Subjects.length}`,
+      badge: `${currentSemesterSubjects.length}`,
       badgeColor: 'bg-white/10 text-white',
     },
     {
@@ -195,7 +202,7 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
                 {settings.studentProfile.name}
               </p>
               <p className="text-[11px] text-slate-400 truncate">
-                {settings.studentProfile.currentSemester} • B.Tech
+                {selectedSemester.name} • B.Tech
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />

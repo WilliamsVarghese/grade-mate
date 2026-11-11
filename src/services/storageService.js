@@ -6,6 +6,8 @@
 const STORAGE_KEYS = {
   SETTINGS: 'grademate_settings_v1',
   SEMESTER_5: 'grademate_semester5_v1',
+  SEMESTERS_DATA: 'grademate_semesters_subjects_v2',
+  SELECTED_SEMESTER: 'grademate_selected_semester_v1',
   MINOR: 'grademate_minor_v1',
   ELECTIVE: 'grademate_elective_v1',
   PAST_SEMESTERS: 'grademate_past_semesters_v1',

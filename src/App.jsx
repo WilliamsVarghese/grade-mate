@@ -19,6 +19,8 @@ export function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="semester-5" element={<Semester5 />} />
+              <Route path="semesters" element={<Semester5 />} />
+              <Route path="curriculum" element={<Semester5 />} />
               <Route path="minor" element={<Minor />} />
               <Route path="elective" element={<Elective />} />
               <Route path="performance" element={<Performance />} />

@@ -13,10 +13,10 @@ import { Card } from '../common/Card';
 import { useAcademic } from '../../context/AcademicContext';
 
 export function MarksBarChart({ height = 280, subjects = null, title = "Subject-wise Performance" }) {
-  const { semester5Subjects } = useAcademic();
+  const { currentSemesterSubjects } = useAcademic();
   const [viewMode, setViewMode] = useState('components'); // 'components' or 'percentage'
 
-  const activeSubjects = subjects || semester5Subjects;
+  const activeSubjects = subjects || currentSemesterSubjects;
 
   const data = activeSubjects.map((s) => ({
     name: s.code || s.name.slice(0, 10),

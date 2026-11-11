@@ -12,7 +12,7 @@ export function Layout() {
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [addSubjectOpen, setAddSubjectOpen] = useState(false);
 
-  const { addSemester5Subject } = useAcademic();
+  const { addSubject, selectedSemesterId, selectedSemester } = useAcademic();
 
   return (
     <div className="min-h-screen bg-[#08090C] text-slate-100 flex flex-col antialiased selection:bg-[#9AF04F] selection:text-[#090D04]">
@@ -49,8 +49,8 @@ export function Layout() {
       <SubjectModal
         isOpen={addSubjectOpen}
         onClose={() => setAddSubjectOpen(false)}
-        onSave={addSemester5Subject}
-        sectionTitle="Semester 5 Regular Subject"
+        onSave={(data) => addSubject(data, selectedSemesterId)}
+        sectionTitle={`${selectedSemester.name} Regular Subject`}
       />
     </div>
   );

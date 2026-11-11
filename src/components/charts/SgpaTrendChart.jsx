@@ -13,24 +13,15 @@ import { Card } from '../common/Card';
 import { useAcademic } from '../../context/AcademicContext';
 
 export function SgpaTrendChart({ height = 280 }) {
-  const { pastSemesters, semester5SGPA, cumulativeCGPA } = useAcademic();
+  const { allSemestersSGPA, selectedSemesterId, cumulativeCGPA } = useAcademic();
 
-  const data = [
-    ...pastSemesters.map((s) => ({
-      name: s.semester.replace('Semester ', 'Sem '),
-      fullName: s.semester,
-      sgpa: Number(s.sgpa) || 0,
-      credits: s.credits,
-      isCurrent: false,
-    })),
-    {
-      name: 'Sem 5',
-      fullName: 'Semester 5 (Active)',
-      sgpa: semester5SGPA.sgpa || 0,
-      credits: semester5SGPA.totalCredits,
-      isCurrent: true,
-    },
-  ];
+  const data = allSemestersSGPA.map((s) => ({
+    name: s.shortName,
+    fullName: s.name,
+    sgpa: s.isEvaluated ? Number(s.sgpa) : 0,
+    credits: s.totalCredits,
+    isCurrent: s.id === selectedSemesterId,
+  }));
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
