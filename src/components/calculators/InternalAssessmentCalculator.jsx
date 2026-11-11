@@ -1,30 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calculator,
-  Plus,
-  Trash2,
   Check,
   RefreshCw,
   AlertCircle,
   CheckCircle2,
-  Award,
-  Calendar,
-  Layers,
+  Sliders,
+  Plus,
+  Trash2,
   Sparkles,
   ArrowRight,
-  Save,
   BookOpen,
-  Info
+  ChevronDown,
+  ChevronUp,
+  FlaskConical,
+  GraduationCap
 } from 'lucide-react';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { useAcademic } from '../../context/AcademicContext';
 import {
-  calculateWeightedComponent,
-  calculateAttendanceEvaluation,
-  calculateInternalAssessmentBreakdown,
+  calculateCatContribution,
+  calculateSimpleInternalAssessment,
 } from '../../utils/calculations';
+import {
+  DEFAULT_SUBJECT_SYLLABUS_SCHEMES,
+  SYLLABUS_PRESETS,
+  getSubjectDefaultSyllabusScheme,
+} from '../../utils/syllabusSchemes';
 
 export function InternalAssessmentCalculator({
   initialSubjectId = null,
@@ -42,878 +46,879 @@ export function InternalAssessmentCalculator({
     if (initialSubjectId && allSubjects.some(s => s.id === initialSubjectId)) {
       return initialSubjectId;
     }
-    return allSubjects.length > 0 ? allSubjects[0].id : 'custom';
+    return allSubjects.length > 0 ? allSubjects[0].id : '';
   });
 
-  // Target maximum internal marks (e.g. 25, 40, or 50)
-  const [targetMaxInternal, setTargetMaxInternal] = useState(50);
-
-  // CAT 1 state
-  const [cat1, setCat1] = useState({
-    obtained: 35,
-    max: 50,
-    contribution: 7.5,
-  });
-
-  // CAT 2 state (Purple accent)
-  const [cat2, setCat2] = useState({
-    obtained: 40,
-    max: 50,
-    contribution: 7.5,
-  });
-
-  // Attendance state
-  const [attendance, setAttendance] = useState({
-    attended: 36,
-    conducted: 40,
-    contribution: 5,
-    scheme: 'proportional', // 'proportional', 'slab', 'direct'
-    manualScore: 4,
-  });
-
-  // Optional Additional Components (Assignment, Quiz, Lab, Seminar, etc.)
-  const [components, setComponents] = useState([
-    {
-      id: 'comp-1',
-      name: 'Assignment & Mini-Project',
-      obtained: 18,
-      max: 20,
-      contribution: 5,
-    },
-  ]);
-
-  const [validationErrors, setValidationErrors] = useState({});
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
-
-  // Sync if initialSubjectId prop changes
+  // Synchronize when initialSubjectId prop changes
   useEffect(() => {
     if (initialSubjectId && allSubjects.some(s => s.id === initialSubjectId)) {
       setSelectedSubjectId(initialSubjectId);
     }
   }, [initialSubjectId, allSubjects]);
 
-  // Load saved subject configuration when selected subject changes
+  const currentSubject = allSubjects.find(s => s.id === selectedSubjectId) || allSubjects[0];
+
+  // Syllabus scheme configuration
+  const [scheme, setScheme] = useState(() => {
+    return getSubjectDefaultSyllabusScheme(currentSubject);
+  });
+
+  // Marks entered by the user
+  const [attendanceObtained, setAttendanceObtained] = useState('8.5');
+  const [assignment1Obtained, setAssignment1Obtained] = useState('6.5');
+  const [assignment2Obtained, setAssignment2Obtained] = useState('7');
+  const [hasAssignment2, setHasAssignment2] = useState(true);
+
+  // Both CATs are conducted out of 30 marks
+  const [cat1MarksOut30, setCat1MarksOut30] = useState('24');
+  const [cat2MarksOut30, setCat2MarksOut30] = useState('26');
+
+  // Optional Practical / Lab component
+  const [hasPractical, setHasPractical] = useState(false);
+  const [practicalObtained, setPracticalObtained] = useState('26');
+
+  // UI state for editing syllabus scheme
+  const [showSchemeEditor, setShowSchemeEditor] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
+
+  // Load saved subject configuration or initial syllabus when subject changes
   useEffect(() => {
-    if (selectedSubjectId && selectedSubjectId !== 'custom') {
-      const saved = internalAssessments[selectedSubjectId];
-      const subject = allSubjects.find(s => s.id === selectedSubjectId);
+    if (!selectedSubjectId) return;
 
-      if (saved) {
-        setCat1(saved.cat1 || { obtained: 35, max: 50, contribution: 7.5 });
-        setCat2(saved.cat2 || { obtained: 40, max: 50, contribution: 7.5 });
-        setAttendance(saved.attendance || { attended: 36, conducted: 40, contribution: 5, scheme: 'proportional', manualScore: null });
-        setComponents(saved.components || []);
-        if (saved.targetMaxInternal) setTargetMaxInternal(saved.targetMaxInternal);
-      } else if (subject) {
-        // Pre-populate with intelligent defaults matching subject CIA Max
-        const subjectCiaMax = Number(subject.ciaMax) || 50;
-        setTargetMaxInternal(subjectCiaMax);
+    const saved = internalAssessments[selectedSubjectId];
+    const defaultScheme = getSubjectDefaultSyllabusScheme(currentSubject);
 
-        if (subjectCiaMax <= 25) {
-          // 7.5 + 7.5 + 5 + 5 = 25
-          setCat1({ obtained: Math.round(subject.ciaMarks * 0.35 * 10) / 10 || 35, max: 50, contribution: 7.5 });
-          setCat2({ obtained: Math.round(subject.ciaMarks * 0.35 * 10) / 10 || 40, max: 50, contribution: 7.5 });
-          setAttendance({ attended: 36, conducted: 40, contribution: 5, scheme: 'proportional', manualScore: null });
-          setComponents([{ id: 'comp-1', name: 'Assignment', obtained: 18, max: 20, contribution: 5 }]);
-        } else if (subjectCiaMax <= 40) {
-          // 12.5 + 12.5 + 5 + 10 = 40
-          setCat1({ obtained: 38, max: 50, contribution: 12.5 });
-          setCat2({ obtained: 42, max: 50, contribution: 12.5 });
-          setAttendance({ attended: 38, conducted: 40, contribution: 5, scheme: 'proportional', manualScore: null });
-          setComponents([{ id: 'comp-1', name: 'Assignment & Quiz', obtained: 19, max: 20, contribution: 10 }]);
-        } else {
-          // 15 + 15 + 10 + 10 = 50, or 20 + 20 + 5 + 5 = 50
-          setCat1({ obtained: Math.round(subject.ciaMarks * 0.45 * 10) / 10 || 42, max: 50, contribution: 15 });
-          setCat2({ obtained: Math.round(subject.ciaMarks * 0.45 * 10) / 10 || 44, max: 50, contribution: 15 });
-          setAttendance({ attended: 38, conducted: 40, contribution: 10, scheme: 'proportional', manualScore: null });
-          setComponents([
-            { id: 'comp-1', name: 'Continuous Assignment', obtained: 18, max: 20, contribution: 10 },
-          ]);
-        }
+    if (saved && saved.isSimpleScheme) {
+      // Restore previously saved simple scheme and marks
+      if (saved.scheme) setScheme(saved.scheme);
+      setAttendanceObtained(saved.attendanceObtained?.toString() || '0');
+      setAssignment1Obtained(saved.assignment1Obtained?.toString() || '0');
+      setAssignment2Obtained(saved.assignment2Obtained?.toString() || '0');
+      setHasAssignment2(saved.hasAssignment2 !== false);
+      setCat1MarksOut30(saved.cat1MarksOut30?.toString() || '0');
+      setCat2MarksOut30(saved.cat2MarksOut30?.toString() || '0');
+      setHasPractical(!!saved.hasPractical);
+      setPracticalObtained(saved.practicalObtained?.toString() || '0');
+    } else {
+      // Apply subject's syllabus scheme
+      setScheme(defaultScheme);
+      setHasAssignment2(defaultScheme.hasAssignment2);
+      setHasPractical(defaultScheme.hasPractical);
+
+      // Intelligent starter marks matching subject's current CIA or realistic default
+      if (defaultScheme.cat1Contribution === 7.5 && defaultScheme.totalCiaMax <= 25) {
+        // 7.5 CATs (25 CIA)
+        setAttendanceObtained('4.5');
+        setAssignment1Obtained('4.5');
+        setAssignment2Obtained('0');
+        setCat1MarksOut30('24'); // 24/30 * 7.5 = 6.00
+        setCat2MarksOut30('26'); // 26/30 * 7.5 = 6.50
+        setPracticalObtained('0');
+      } else if (defaultScheme.hasPractical && defaultScheme.practicalMax >= 25) {
+        // Lab or Project (50 CIA)
+        setAttendanceObtained('4.5');
+        setAssignment1Obtained('0');
+        setAssignment2Obtained('0');
+        setCat1MarksOut30('25'); // 25/30 * 7.5 = 6.25
+        setCat2MarksOut30('27'); // 27/30 * 7.5 = 6.75
+        setPracticalObtained(defaultScheme.practicalMax === 30 ? '28' : '23');
+      } else {
+        // Standard Theory (50 CIA, 12.5 CATs)
+        setAttendanceObtained('9');
+        setAssignment1Obtained('7');
+        setAssignment2Obtained('6.5');
+        setCat1MarksOut30('24'); // 24/30 * 12.5 = 10.00
+        setCat2MarksOut30('26'); // 26/30 * 12.5 = 10.83
+        setPracticalObtained('0');
       }
     }
   }, [selectedSubjectId]);
 
-  // Handle Add New Component
-  const handleAddComponent = () => {
-    const newComp = {
-      id: 'comp-' + Date.now(),
-      name: `Assessment Component ${components.length + 1}`,
-      obtained: 15,
-      max: 20,
-      contribution: 5,
-    };
-    setComponents(prev => [...prev, newComp]);
-  };
-
-  // Handle Remove Component
-  const handleRemoveComponent = (id) => {
-    setComponents(prev => prev.filter(c => c.id !== id));
-  };
-
-  // Handle Component Field Change
-  const handleComponentChange = (id, field, value) => {
-    setComponents(prev =>
-      prev.map(c => {
-        if (c.id === id) {
-          return {
-            ...c,
-            [field]: field === 'name' ? value : Math.max(0, parseFloat(value) || 0),
-          };
-        }
-        return c;
-      })
-    );
-  };
-
-  // Live Comprehensive Calculation
+  // Real-time calculation
   const calculation = useMemo(() => {
-    const errs = {};
+    const attObt = Math.max(0, parseFloat(attendanceObtained) || 0);
+    const assign1Obt = Math.max(0, parseFloat(assignment1Obtained) || 0);
+    const assign2Obt = Math.max(0, parseFloat(assignment2Obtained) || 0);
+    const cat1Raw = Math.max(0, Math.min(30, parseFloat(cat1MarksOut30) || 0));
+    const cat2Raw = Math.max(0, Math.min(30, parseFloat(cat2MarksOut30) || 0));
+    const practicalObt = Math.max(0, parseFloat(practicalObtained) || 0);
 
-    // Validate CAT 1
-    if (cat1.max <= 0) errs.cat1Max = 'Maximum marks must be > 0';
-    if (cat1.obtained < 0) errs.cat1Obt = 'Marks cannot be negative';
-    if (cat1.obtained > cat1.max) errs.cat1Obt = `Cannot exceed max (${cat1.max})`;
-    if (cat1.contribution < 0) errs.cat1Cont = 'Contribution cannot be negative';
-
-    // Validate CAT 2
-    if (cat2.max <= 0) errs.cat2Max = 'Maximum marks must be > 0';
-    if (cat2.obtained < 0) errs.cat2Obt = 'Marks cannot be negative';
-    if (cat2.obtained > cat2.max) errs.cat2Obt = `Cannot exceed max (${cat2.max})`;
-    if (cat2.contribution < 0) errs.cat2Cont = 'Contribution cannot be negative';
-
-    // Validate Attendance
-    if (attendance.conducted <= 0) errs.attConducted = 'Classes conducted must be > 0';
-    if (attendance.attended < 0) errs.attAttended = 'Cannot be negative';
-    if (attendance.attended > attendance.conducted) errs.attAttended = 'Cannot exceed conducted';
-    if (attendance.contribution < 0) errs.attCont = 'Contribution cannot be negative';
-
-    // Validate components
-    components.forEach((c, idx) => {
-      if (c.max <= 0) errs[`comp_${idx}_max`] = 'Must be > 0';
-      if (c.obtained < 0) errs[`comp_${idx}_obt`] = 'Cannot be negative';
-      if (c.obtained > c.max) errs[`comp_${idx}_obt`] = `Exceeds max (${c.max})`;
+    return calculateSimpleInternalAssessment({
+      attendance: {
+        obtained: attObt,
+        max: Number(scheme.attendanceMax) || 0,
+      },
+      assignment1: {
+        obtained: assign1Obt,
+        max: Number(scheme.assignment1Max) || 0,
+      },
+      assignment2: {
+        enabled: hasAssignment2,
+        obtained: assign2Obt,
+        max: Number(scheme.assignment2Max) || 0,
+      },
+      cat1: {
+        obtained: cat1Raw,
+        contribution: Number(scheme.cat1Contribution) || 0,
+      },
+      cat2: {
+        obtained: cat2Raw,
+        contribution: Number(scheme.cat2Contribution) || 0,
+      },
+      practical: {
+        enabled: hasPractical,
+        name: scheme.practicalName || 'Practical / Lab Work',
+        obtained: practicalObt,
+        max: Number(scheme.practicalMax) || 0,
+      },
     });
+  }, [
+    attendanceObtained,
+    assignment1Obtained,
+    assignment2Obtained,
+    hasAssignment2,
+    cat1MarksOut30,
+    cat2MarksOut30,
+    hasPractical,
+    practicalObtained,
+    scheme,
+  ]);
 
-    setValidationErrors(errs);
+  // Validation warnings
+  const validationWarnings = useMemo(() => {
+    const warnings = {};
+    const attObt = parseFloat(attendanceObtained) || 0;
+    const assign1Obt = parseFloat(assignment1Obtained) || 0;
+    const assign2Obt = parseFloat(assignment2Obtained) || 0;
+    const cat1Raw = parseFloat(cat1MarksOut30) || 0;
+    const cat2Raw = parseFloat(cat2MarksOut30) || 0;
+    const practicalObt = parseFloat(practicalObtained) || 0;
 
-    return calculateInternalAssessmentBreakdown({
-      cat1,
-      cat2,
-      attendance,
-      components,
-    });
-  }, [cat1, cat2, attendance, components]);
+    if (attObt > scheme.attendanceMax) warnings.attendance = `Cannot exceed max (${scheme.attendanceMax})`;
+    if (assign1Obt > scheme.assignment1Max) warnings.assignment1 = `Cannot exceed max (${scheme.assignment1Max})`;
+    if (hasAssignment2 && assign2Obt > scheme.assignment2Max) warnings.assignment2 = `Cannot exceed max (${scheme.assignment2Max})`;
+    if (cat1Raw > 30) warnings.cat1 = 'CAT 1 is conducted out of 30 marks';
+    if (cat2Raw > 30) warnings.cat2 = 'CAT 2 is conducted out of 30 marks';
+    if (hasPractical && practicalObt > scheme.practicalMax) warnings.practical = `Cannot exceed max (${scheme.practicalMax})`;
 
-  // Check if sum of all component contributions matches targetMaxInternal
-  const totalWeightageConfigured = useMemo(() => {
-    const cat1C = Number(cat1.contribution) || 0;
-    const cat2C = Number(cat2.contribution) || 0;
-    const attC = Number(attendance.contribution) || 0;
-    const compsC = components.reduce((sum, c) => sum + (Number(c.contribution) || 0), 0);
-    return Math.round((cat1C + cat2C + attC + compsC) * 100) / 100;
-  }, [cat1.contribution, cat2.contribution, attendance.contribution, components]);
+    return warnings;
+  }, [
+    attendanceObtained,
+    assignment1Obtained,
+    assignment2Obtained,
+    hasAssignment2,
+    cat1MarksOut30,
+    cat2MarksOut30,
+    hasPractical,
+    practicalObtained,
+    scheme,
+  ]);
 
-  const weightageMatchesTarget = Math.abs(totalWeightageConfigured - targetMaxInternal) < 0.05;
+  // Save changes to current subject
+  const handleApplyToSubject = () => {
+    if (!selectedSubjectId) return;
 
-  // Reset function
-  const handleReset = () => {
-    setCat1({ obtained: 35, max: 50, contribution: 7.5 });
-    setCat2({ obtained: 40, max: 50, contribution: 7.5 });
-    setAttendance({ attended: 36, conducted: 40, contribution: 5, scheme: 'proportional', manualScore: null });
-    setComponents([{ id: 'comp-1', name: 'Assignment', obtained: 18, max: 20, contribution: 5 }]);
-    setTargetMaxInternal(25);
-    setSaveSuccessMsg(null);
-  };
-
-  // Save & Apply directly to Subject
-  const handleSaveAndApply = () => {
     const payload = {
-      targetMaxInternal,
-      cat1,
-      cat2,
-      attendance,
-      components,
+      isSimpleScheme: true,
+      scheme,
+      attendanceObtained,
+      assignment1Obtained,
+      assignment2Obtained,
+      hasAssignment2,
+      cat1MarksOut30,
+      cat2MarksOut30,
+      hasPractical,
+      practicalObtained,
       totalObtained: calculation.totalObtained,
       maxInternal: calculation.maxInternal,
-      internalPercentage: calculation.internalPercentage,
-      calculatedAt: new Date().toISOString(),
+      percentage: calculation.percentage,
+      attendance: {
+        obtained: calculation.attendance.obtained,
+        max: calculation.attendance.max,
+        percentage: calculation.attendance.max > 0
+          ? Math.round((calculation.attendance.obtained / calculation.attendance.max) * 100)
+          : 90,
+      },
     };
 
-    saveSubjectInternalAssessment(selectedSubjectId, payload, selectedSubjectId !== 'custom');
+    saveSubjectInternalAssessment(selectedSubjectId, payload, true);
+    setSaveSuccessMsg(`Applied ${calculation.totalObtained} / ${calculation.maxInternal} CIA to ${currentSubject?.name || 'course'}!`);
+    setTimeout(() => setSaveSuccessMsg(null), 3500);
 
-    const subj = allSubjects.find(s => s.id === selectedSubjectId);
-    const name = subj ? subj.name : 'Custom';
-    setSaveSuccessMsg(`Successfully applied ${calculation.totalObtained} / ${calculation.maxInternal} CIA marks to ${name}!`);
-
-    if (onApplySuccess) {
-      onApplySuccess(calculation);
-    }
-
-    setTimeout(() => setSaveSuccessMsg(null), 4000);
+    if (onApplySuccess) onApplySuccess();
   };
 
-  const selectedSubjectObj = allSubjects.find(s => s.id === selectedSubjectId);
+  // Reset marks for current subject
+  const handleResetMarks = () => {
+    setAttendanceObtained('0');
+    setAssignment1Obtained('0');
+    setAssignment2Obtained('0');
+    setCat1MarksOut30('0');
+    setCat2MarksOut30('0');
+    setPracticalObtained('0');
+  };
+
+  // Apply syllabus preset
+  const handleSelectPreset = (preset) => {
+    setScheme(preset);
+    setHasAssignment2(preset.hasAssignment2);
+    setHasPractical(preset.hasPractical);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Top Controls: Subject Selection & Target Max CIA */}
-      <div className="p-5 rounded-3xl bg-[#141724] border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#9AF04F] mb-1.5">
-            Subject-Specific Assessment Profile:
+      {/* 1. TOP HEADER & SUBJECT SELECTOR */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1">
+          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+            Select Course / Subject
           </label>
-          <div className="flex items-center gap-3">
+          <div className="relative">
             <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full sm:w-80 px-4 py-2.5 rounded-2xl bg-[#1C2030] text-white border border-white/[0.1] text-xs sm:text-sm font-semibold outline-none focus:border-[#9AF04F]"
+              className="w-full text-sm font-bold bg-[#141724] border border-white/[0.1] rounded-2xl py-2.5 px-3.5 text-white focus:outline-none focus:border-[#9AF04F] transition-all cursor-pointer pr-10"
             >
-              <option value="custom">⚡ Standalone / Custom Simulation</option>
-              <optgroup label="Semester 5 Core Courses">
-                {allSubjects
-                  .filter(s => s.category === 'Semester 5 Core')
-                  .map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code || 'Core'}) – {s.credits} Cr
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Minor Track (IoT & Sensors)">
-                {allSubjects
-                  .filter(s => s.category === 'Minor Track')
-                  .map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code || 'Minor'})
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Elective Track (OS Security)">
-                {allSubjects
-                  .filter(s => s.category === 'Elective Track')
-                  .map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code || 'Elective'})
-                    </option>
-                  ))}
-              </optgroup>
+              {allSubjects.map((sub) => (
+                <option key={sub.id} value={sub.id} className="bg-[#141724] text-white">
+                  {sub.code ? `[${sub.code}] ` : ''}{sub.name} — ({sub.category || 'Regular'}) • Current CIA: {sub.ciaMarks ?? 0}/{sub.ciaMax ?? 50}
+                </option>
+              ))}
             </select>
-
-            {selectedSubjectObj && (
-              <span className="hidden sm:inline-flex text-[11px] font-bold px-3 py-1 rounded-full bg-white/[0.06] text-slate-300">
-                Current CIA: {selectedSubjectObj.ciaMarks} / {selectedSubjectObj.ciaMax}
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Target Max Internal Marks Input */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Current Syllabus Tag & Configure Toggle */}
+        <div className="flex items-center gap-2 self-start sm:self-end">
+          <div className="px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-right">
+            <span className="text-[10px] text-slate-400 font-semibold block">Syllabus Scheme</span>
+            <span className="text-xs font-black text-[#9AF04F]">{scheme.cat1Contribution} CATs • Max CIA: {scheme.totalCiaMax}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowSchemeEditor(!showSchemeEditor)}
+            className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
+              showSchemeEditor
+                ? 'bg-[#9AF04F]/15 border-[#9AF04F] text-[#9AF04F]'
+                : 'bg-white/[0.05] border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.1]'
+            }`}
+            title="Configure Syllabus Weightages"
+          >
+            <Sliders className="w-4 h-4" />
+            <span className="hidden sm:inline">Scheme</span>
+            {showSchemeEditor ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. SYLLABUS SCHEME CONFIGURATION PANEL (Collapsible) */}
+      {showSchemeEditor && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#0D0F16] border border-[#9AF04F]/30 shadow-card-dark space-y-4 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/[0.06]">
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-[#9AF04F]" />
+                Syllabus Mark Distribution for {currentSubject?.name || 'Subject'}
+              </h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Loaded according to curriculum syllabus guidelines. Adjust contributions if required.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-400">Sum of Components:</span>
+              <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
+                (scheme.attendanceMax + scheme.assignment1Max + (scheme.hasAssignment2 ? scheme.assignment2Max : 0) + scheme.cat1Contribution + scheme.cat2Contribution + (scheme.hasPractical ? scheme.practicalMax : 0)) === scheme.totalCiaMax
+                  ? 'bg-[#9AF04F]/20 text-[#9AF04F]'
+                  : 'bg-amber-500/20 text-amber-400'
+              }`}>
+                {scheme.attendanceMax + scheme.assignment1Max + (scheme.hasAssignment2 ? scheme.assignment2Max : 0) + scheme.cat1Contribution + scheme.cat2Contribution + (scheme.hasPractical ? scheme.practicalMax : 0)} / {scheme.totalCiaMax}
+              </span>
+            </div>
+          </div>
+
+          {/* Preset Buttons */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Target Max CIA
-            </label>
-            <div className="flex items-center gap-1.5">
+            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-2">
+              Quick Syllabus Presets
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              {SYLLABUS_PRESETS.map((p) => {
+                const isActive = scheme.cat1Contribution === p.cat1Contribution && scheme.totalCiaMax === p.totalCiaMax && scheme.hasPractical === p.hasPractical;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(p)}
+                    className={`p-2.5 rounded-2xl text-left border transition-all ${
+                      isActive
+                        ? 'bg-[#9AF04F]/10 border-[#9AF04F] text-white shadow-neon-sm'
+                        : 'bg-[#141724] border-white/[0.06] text-slate-300 hover:border-white/[0.15] hover:text-white'
+                    }`}
+                  >
+                    <p className="text-xs font-bold leading-tight">{p.name}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Editable Weightage Inputs */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                Attendance Max
+              </label>
               <input
                 type="number"
-                min="1"
-                max="100"
-                step="0.5"
-                value={targetMaxInternal}
-                onChange={(e) => setTargetMaxInternal(parseFloat(e.target.value) || 50)}
-                className="w-20 px-3 py-1.5 text-xs font-black rounded-xl border border-white/[0.1] bg-[#1C2030] text-[#9AF04F]"
-              />
-              <span className="text-xs text-slate-400 font-semibold">Marks</span>
-            </div>
-          </div>
-
-          {/* Quick preset weightage buttons */}
-          <div className="flex items-center gap-1.5 self-end">
-            <button
-              type="button"
-              onClick={() => {
-                setTargetMaxInternal(25);
-                setCat1(p => ({ ...p, contribution: 7.5 }));
-                setCat2(p => ({ ...p, contribution: 7.5 }));
-                setAttendance(p => ({ ...p, contribution: 5 }));
-                setComponents([{ id: 'comp-1', name: 'Assignment', obtained: 18, max: 20, contribution: 5 }]);
-              }}
-              className="text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 transition-colors"
-            >
-              25M Scheme
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setTargetMaxInternal(50);
-                setCat1(p => ({ ...p, contribution: 15 }));
-                setCat2(p => ({ ...p, contribution: 15 }));
-                setAttendance(p => ({ ...p, contribution: 10 }));
-                setComponents([{ id: 'comp-1', name: 'Assignment', obtained: 18, max: 20, contribution: 10 }]);
-              }}
-              className="text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 transition-colors"
-            >
-              50M Scheme
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid: CAT 1, CAT 2, Attendance, and Additional Components */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* CARD 1: CAT 1 (First Internal Examination) */}
-        <div className="p-5 rounded-3xl bg-[#11131B] border border-white/[0.08] hover:border-[#9AF04F]/30 shadow-card-dark transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] flex items-center justify-center font-black text-xs">
-                  C1
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">
-                    CAT 1 Examination
-                  </h3>
-                  <p className="text-[11px] text-slate-400">First Continuous Assessment Test</p>
-                </div>
-              </div>
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-[#9AF04F]/15 text-[#9AF04F]">
-                Weight: {cat1.contribution}M
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2.5 my-3">
-              <Input
-                label="Obtained"
-                type="number"
-                step="0.25"
-                min="0"
-                value={cat1.obtained}
-                onChange={(e) => setCat1({ ...cat1, obtained: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                error={validationErrors.cat1Obt}
-                placeholder="35"
-              />
-              <Input
-                label="Maximum"
-                type="number"
-                step="1"
-                min="1"
-                value={cat1.max}
-                onChange={(e) => setCat1({ ...cat1, max: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.cat1Max}
-                placeholder="50"
-              />
-              <Input
-                label="Contribution"
-                type="number"
                 step="0.5"
                 min="0"
-                value={cat1.contribution}
-                onChange={(e) => setCat1({ ...cat1, contribution: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.cat1Cont}
-                placeholder="7.5"
-              />
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-mono">
-              ({cat1.obtained || 0} / {cat1.max || 50}) × {cat1.contribution}
-            </span>
-            <div className="text-right">
-              <span className="text-[10px] text-slate-400 block uppercase font-bold">Weighted CAT 1</span>
-              <span className="text-lg font-black text-[#9AF04F]">
-                {calculation.cat1.weighted} <span className="text-xs font-normal text-slate-400">/ {cat1.contribution}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 2: CAT 2 (Second Internal Examination) - PURPLE ACCENT AS REQUIRED */}
-        <div className="p-5 rounded-3xl bg-gradient-to-br from-[#1C1230] via-[#140D24] to-[#0E0919] border border-[#9655F5]/40 hover:border-[#9655F5]/70 shadow-purple-glow transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#9655F5]/25 text-[#C084FC] flex items-center justify-center font-black text-xs">
-                  C2
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">
-                    CAT 2 Examination
-                  </h3>
-                  <p className="text-[11px] text-[#C084FC]">Second Continuous Assessment Test</p>
-                </div>
-              </div>
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-[#9655F5]/25 text-[#C084FC] border border-[#9655F5]/40">
-                Weight: {cat2.contribution}M
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2.5 my-3">
-              <Input
-                label="Obtained"
-                type="number"
-                step="0.25"
-                min="0"
-                value={cat2.obtained}
-                onChange={(e) => setCat2({ ...cat2, obtained: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                error={validationErrors.cat2Obt}
-                placeholder="40"
-              />
-              <Input
-                label="Maximum"
-                type="number"
-                step="1"
-                min="1"
-                value={cat2.max}
-                onChange={(e) => setCat2({ ...cat2, max: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.cat2Max}
-                placeholder="50"
-              />
-              <Input
-                label="Contribution"
-                type="number"
-                step="0.5"
-                min="0"
-                value={cat2.contribution}
-                onChange={(e) => setCat2({ ...cat2, contribution: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.cat2Cont}
-                placeholder="7.5"
-              />
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-[#9655F5]/20 flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-mono">
-              ({cat2.obtained || 0} / {cat2.max || 50}) × {cat2.contribution}
-            </span>
-            <div className="text-right">
-              <span className="text-[10px] text-[#C084FC] block uppercase font-bold">Weighted CAT 2</span>
-              <span className="text-lg font-black text-white">
-                {calculation.cat2.weighted} <span className="text-xs font-normal text-slate-400">/ {cat2.contribution}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Combined CAT Marks Pill Banner */}
-      <div className="p-3.5 rounded-2xl bg-[#161824] border border-white/[0.06] flex items-center justify-between text-xs font-semibold">
-        <span className="text-slate-300">
-          Combined CAT Assessment Performance (CAT 1 + CAT 2):
-        </span>
-        <span className="text-sm font-black text-white">
-          <strong className="text-[#9AF04F]">{calculation.combinedCat.obtained}</strong> / {calculation.combinedCat.contribution} Marks{' '}
-          <span className="text-xs font-normal text-slate-400">
-            ({calculation.combinedCat.contribution > 0 ? Math.round((calculation.combinedCat.obtained / calculation.combinedCat.contribution) * 100) : 0}%)
-          </span>
-        </span>
-      </div>
-
-      {/* Secondary Grid: Attendance & Additional Components */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* CARD 3: Attendance Marks Calculator */}
-        <div className="p-5 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs">
-                  %
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">
-                    Attendance Marks Calculator
-                  </h3>
-                  <p className="text-[11px] text-slate-400">Configurable attendance assessment</p>
-                </div>
-              </div>
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400">
-                Weight: {attendance.contribution}M
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2.5 my-3">
-              <Input
-                label="Attended"
-                type="number"
-                min="0"
-                value={attendance.attended}
-                onChange={(e) => setAttendance({ ...attendance, attended: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                error={validationErrors.attAttended}
-                placeholder="36"
-              />
-              <Input
-                label="Conducted"
-                type="number"
-                min="1"
-                value={attendance.conducted}
-                onChange={(e) => setAttendance({ ...attendance, conducted: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.attConducted}
-                placeholder="40"
-              />
-              <Input
-                label="Contribution"
-                type="number"
-                step="0.5"
-                min="0"
-                value={attendance.contribution}
-                onChange={(e) => setAttendance({ ...attendance, contribution: parseFloat(e.target.value) || 0 })}
-                error={validationErrors.attCont}
-                placeholder="5"
+                value={scheme.attendanceMax}
+                onChange={(e) => setScheme(prev => ({ ...prev, attendanceMax: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-[#9AF04F]"
               />
             </div>
 
-            {/* Attendance Marking Scheme Selector */}
-            <div className="mt-3 p-3 rounded-2xl bg-[#161824] border border-white/[0.05] flex items-center justify-between gap-3 text-xs">
-              <span className="text-slate-400 font-semibold">Evaluation Mode:</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setAttendance({ ...attendance, scheme: 'proportional' })}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                    attendance.scheme === 'proportional'
-                      ? 'bg-[#9AF04F] text-[#0A0D06]'
-                      : 'bg-white/[0.06] text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Proportional
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAttendance({ ...attendance, scheme: 'slab' })}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                    attendance.scheme === 'slab'
-                      ? 'bg-[#9AF04F] text-[#0A0D06]'
-                      : 'bg-white/[0.06] text-slate-400 hover:text-white'
-                  }`}
-                  title="≥90%: 100%, ≥85%: 80%, ≥80%: 60%, ≥75%: 40%, <75%: 0%"
-                >
-                  Slab (University)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Calculated Attendance</span>
-              <span className={`text-sm font-black ${calculation.attendance.isShortage ? 'text-rose-400' : 'text-emerald-400'}`}>
-                {calculation.attendance.percentage}%{' '}
-                {calculation.attendance.isShortage && '(Shortage < 75%)'}
-              </span>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                Assign 1 Max
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={scheme.assignment1Max}
+                onChange={(e) => setScheme(prev => ({ ...prev, assignment1Max: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-[#9AF04F]"
+              />
             </div>
-            <div className="text-right">
-              <span className="text-[10px] text-slate-400 block uppercase font-bold">Attendance Marks</span>
-              <span className="text-lg font-black text-emerald-400">
-                {calculation.attendance.marksObtained} <span className="text-xs font-normal text-slate-400">/ {attendance.contribution}</span>
-              </span>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                Assign 2 Max
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={scheme.assignment2Max}
+                onChange={(e) => setScheme(prev => ({ ...prev, assignment2Max: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-[#9AF04F]"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                CAT 1 Weight
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={scheme.cat1Contribution}
+                onChange={(e) => setScheme(prev => ({ ...prev, cat1Contribution: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-[#9AF04F] focus:outline-none focus:border-[#9AF04F]"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                CAT 2 Weight
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={scheme.cat2Contribution}
+                onChange={(e) => setScheme(prev => ({ ...prev, cat2Contribution: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-[#9655F5] focus:outline-none focus:border-[#9655F5]"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block mb-1">
+                Total CIA Target
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={scheme.totalCiaMax}
+                onChange={(e) => setScheme(prev => ({ ...prev, totalCiaMax: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                className="w-full text-xs font-bold bg-[#141724] border border-white/[0.1] rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-[#9AF04F]"
+              />
             </div>
           </div>
         </div>
+      )}
 
-        {/* CARD 4: Assignment and Additional Components */}
-        <div className="p-5 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xs">
-                  +
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">
-                    Assignments & Additional Activities
-                  </h3>
-                  <p className="text-[11px] text-slate-400">Quizzes, seminars, labs, mini-projects</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="xs"
-                icon={Plus}
-                onClick={handleAddComponent}
-              >
-                Add Activity
-              </Button>
+      {/* 3. MAIN MARKS ENTRY & RESULT SPLIT GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left Column: Simple Marks Inputs (7 cols on desktop) */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Internal Marks Components
+            </span>
+            <span className="text-[11px] text-slate-500">
+              Auto-scaled to subject syllabus
+            </span>
+          </div>
+
+          {/* Component 1: Attendance */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-white/[0.15] transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#9AF04F]" />
+                Attendance Marks
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                Max: {scheme.attendanceMax} marks
+              </span>
             </div>
 
-            {/* Dynamic Components List */}
-            <div className="space-y-3 my-2 max-h-52 overflow-y-auto pr-1">
-              {components.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-500 rounded-2xl border border-dashed border-white/[0.08]">
-                  No additional components. Click "+ Add Activity" if your subject includes assignments, seminars, or lab evaluations.
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max={scheme.attendanceMax}
+                  value={attendanceObtained}
+                  onChange={(e) => setAttendanceObtained(e.target.value)}
+                  placeholder="Enter obtained marks"
+                  className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                    validationWarnings.attendance ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9AF04F]'
+                  }`}
+                />
+              </div>
+              <span className="text-sm font-bold text-slate-500">/</span>
+              <div className="w-20 py-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center text-sm font-bold text-slate-300">
+                {scheme.attendanceMax}
+              </div>
+            </div>
+
+            {validationWarnings.attendance && (
+              <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.attendance}
+              </p>
+            )}
+          </div>
+
+          {/* Component 2: Assignment 1 */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-white/[0.15] transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                Assignment 1
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                Max: {scheme.assignment1Max} marks
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max={scheme.assignment1Max}
+                  value={assignment1Obtained}
+                  onChange={(e) => setAssignment1Obtained(e.target.value)}
+                  placeholder="Enter obtained marks"
+                  className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                    validationWarnings.assignment1 ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9AF04F]'
+                  }`}
+                />
+              </div>
+              <span className="text-sm font-bold text-slate-500">/</span>
+              <div className="w-20 py-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center text-sm font-bold text-slate-300">
+                {scheme.assignment1Max}
+              </div>
+            </div>
+
+            {validationWarnings.assignment1 && (
+              <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.assignment1}
+              </p>
+            )}
+          </div>
+
+          {/* Component 3: Assignment 2 (Optional) */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-white/[0.15] transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${hasAssignment2 ? 'bg-indigo-400' : 'bg-slate-600'}`} />
+                <span className="text-xs font-bold text-white">Assignment 2 (optional)</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setHasAssignment2(!hasAssignment2)}
+                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition-all ${
+                  hasAssignment2
+                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                    : 'bg-white/[0.05] text-slate-400 border-white/[0.08] hover:text-white'
+                }`}
+              >
+                {hasAssignment2 ? '✓ Enabled' : '+ Enable'}
+              </button>
+            </div>
+
+            {hasAssignment2 ? (
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      step="0.25"
+                      min="0"
+                      max={scheme.assignment2Max}
+                      value={assignment2Obtained}
+                      onChange={(e) => setAssignment2Obtained(e.target.value)}
+                      placeholder="Enter obtained marks"
+                      className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                        validationWarnings.assignment2 ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9AF04F]'
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-slate-500">/</span>
+                  <div className="w-20 py-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center text-sm font-bold text-slate-300">
+                    {scheme.assignment2Max}
+                  </div>
                 </div>
-              ) : (
-                components.map((comp, idx) => {
-                  const compWeighted = calculateWeightedComponent(comp.obtained, comp.max, comp.contribution);
-                  return (
-                    <div
-                      key={comp.id}
-                      className="p-3 rounded-2xl bg-[#161824] border border-white/[0.05] space-y-2"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <input
-                          type="text"
-                          value={comp.name}
-                          onChange={(e) => handleComponentChange(comp.id, 'name', e.target.value)}
-                          placeholder="Component Name (e.g. Assignment 1)"
-                          className="w-full text-xs font-bold bg-transparent text-white border-b border-white/[0.1] pb-1 focus:border-[#9AF04F] outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveComponent(comp.id)}
-                          className="w-6 h-6 rounded-full bg-white/[0.05] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors shrink-0"
-                          title="Remove activity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <label className="text-[10px] text-slate-400 block mb-0.5">Obtained</label>
-                          <input
-                            type="number"
-                            step="0.25"
-                            min="0"
-                            value={comp.obtained}
-                            onChange={(e) => handleComponentChange(comp.id, 'obtained', e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs rounded-xl border border-white/[0.1] bg-[#1C2030] text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-slate-400 block mb-0.5">Maximum</label>
-                          <input
-                            type="number"
-                            step="1"
-                            min="1"
-                            value={comp.max}
-                            onChange={(e) => handleComponentChange(comp.id, 'max', e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs rounded-xl border border-white/[0.1] bg-[#1C2030] text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-slate-400 block mb-0.5">Contribution</label>
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            value={comp.contribution}
-                            onChange={(e) => handleComponentChange(comp.id, 'contribution', e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs rounded-xl border border-white/[0.1] bg-[#1C2030] text-amber-400 font-bold"
-                          />
-                        </div>
-                      </div>
+                {validationWarnings.assignment2 && (
+                  <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.assignment2}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-500 py-1">
+                Disabled for this subject. Click "Enable" if your subject includes a second assignment.
+              </p>
+            )}
+          </div>
 
-                      <div className="text-right text-[11px] text-slate-400">
-                        Weighted: <strong className="text-amber-400">{compWeighted}</strong> / {comp.contribution}M
-                      </div>
-                    </div>
-                  );
-                })
+          {/* Component 4: CAT 1 (Exam conducted out of 30) */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-[#9AF04F]/40 transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#9AF04F] shadow-neon-sm" />
+                CAT 1 (First Internal Examination)
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#9AF04F]/10 text-[#9AF04F] border border-[#9AF04F]/20">
+                Syllabus Weight: {scheme.cat1Contribution} Marks
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="30"
+                  value={cat1MarksOut30}
+                  onChange={(e) => setCat1MarksOut30(e.target.value)}
+                  placeholder="Enter marks out of 30"
+                  className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                    validationWarnings.cat1 ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9AF04F]'
+                  }`}
+                />
+              </div>
+              <span className="text-sm font-bold text-slate-500">/ 30</span>
+              <div className="w-28 py-2 px-3 rounded-xl bg-[#9AF04F]/15 border border-[#9AF04F]/30 text-center font-bold text-xs text-[#9AF04F]">
+                → {calculation.cat1.converted}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+              <span>Formula: ({calculation.cat1.obtained} / 30) × {scheme.cat1Contribution}</span>
+              <span className="font-bold text-[#9AF04F]">{calculation.cat1.converted} / {scheme.cat1Contribution}</span>
+            </div>
+
+            {validationWarnings.cat1 && (
+              <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.cat1}
+              </p>
+            )}
+          </div>
+
+          {/* Component 5: CAT 2 (Exam conducted out of 30 - Purple Accent) */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-[#9655F5]/50 transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#9655F5] shadow-purple-glow" />
+                CAT 2 (Second Internal Examination)
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#9655F5]/15 text-[#9655F5] border border-[#9655F5]/30">
+                Syllabus Weight: {scheme.cat2Contribution} Marks
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="30"
+                  value={cat2MarksOut30}
+                  onChange={(e) => setCat2MarksOut30(e.target.value)}
+                  placeholder="Enter marks out of 30"
+                  className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                    validationWarnings.cat2 ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9655F5]'
+                  }`}
+                />
+              </div>
+              <span className="text-sm font-bold text-slate-500">/ 30</span>
+              <div className="w-28 py-2 px-3 rounded-xl bg-[#9655F5]/20 border border-[#9655F5]/35 text-center font-bold text-xs text-white">
+                → {calculation.cat2.converted}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+              <span>Formula: ({calculation.cat2.obtained} / 30) × {scheme.cat2Contribution}</span>
+              <span className="font-bold text-[#9655F5]">{calculation.cat2.converted} / {scheme.cat2Contribution}</span>
+            </div>
+
+            {validationWarnings.cat2 && (
+              <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.cat2}
+              </p>
+            )}
+          </div>
+
+          {/* Optional Practical / Lab Component */}
+          <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.08] hover:border-white/[0.15] transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <FlaskConical className={`w-4 h-4 ${hasPractical ? 'text-emerald-400' : 'text-slate-500'}`} />
+                <span className="text-xs font-bold text-white">
+                  {scheme.practicalName || 'Practical / Laboratory Component'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setHasPractical(!hasPractical)}
+                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition-all ${
+                  hasPractical
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-white/[0.05] text-slate-400 border-white/[0.08] hover:text-white'
+                }`}
+              >
+                {hasPractical ? '✓ Included' : '+ Include Practical'}
+              </button>
+            </div>
+
+            {hasPractical ? (
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max={scheme.practicalMax || 30}
+                      value={practicalObtained}
+                      onChange={(e) => setPracticalObtained(e.target.value)}
+                      placeholder="Enter practical / lab marks"
+                      className={`w-full text-sm font-bold bg-[#141724] border rounded-xl py-2 px-3 text-white focus:outline-none ${
+                        validationWarnings.practical ? 'border-rose-500' : 'border-white/[0.1] focus:border-[#9AF04F]'
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-slate-500">/</span>
+                  <div className="w-20 py-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center text-sm font-bold text-slate-300">
+                    {scheme.practicalMax || 30}
+                  </div>
+                </div>
+
+                {validationWarnings.practical && (
+                  <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {validationWarnings.practical}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-500 py-1">
+                Optional practical / lab record assessment. Disabled by default for pure theory courses.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Clear Automatic Result Card (5 cols on desktop) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Live CIA Result
+            </span>
+            <span className="text-[11px] font-bold text-[#9AF04F]">Instant Calculation</span>
+          </div>
+
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark space-y-5">
+            {/* Subject Identity Header */}
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                {currentSubject?.code || 'COURSE'} • {currentSubject?.category || 'Semester 5'}
+              </span>
+              <h3 className="text-lg font-black text-white tracking-tight line-clamp-1">
+                {currentSubject?.name || 'Academic Course'}
+              </h3>
+            </div>
+
+            {/* Component Ledger Summary */}
+            <div className="space-y-2.5 pt-2 border-t border-white/[0.06] text-xs">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
+                  Attendance:
+                </span>
+                <span className="font-bold text-white font-mono">
+                  {calculation.attendance.obtained.toFixed(2)} / {calculation.attendance.max}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  Assignment 1:
+                </span>
+                <span className="font-bold text-white font-mono">
+                  {calculation.assignment1.obtained.toFixed(2)} / {calculation.assignment1.max}
+                </span>
+              </div>
+
+              {hasAssignment2 && (
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-slate-300 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                    Assignment 2:
+                  </span>
+                  <span className="font-bold text-white font-mono">
+                    {calculation.assignment2.obtained.toFixed(2)} / {calculation.assignment2.max}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
+                  CAT 1 (out of 30):
+                </span>
+                <span className="font-bold text-[#9AF04F] font-mono">
+                  {calculation.cat1.converted.toFixed(2)} / {calculation.cat1.contribution}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9655F5]" />
+                  CAT 2 (out of 30):
+                </span>
+                <span className="font-bold text-[#9655F5] font-mono">
+                  {calculation.cat2.converted.toFixed(2)} / {calculation.cat2.contribution}
+                </span>
+              </div>
+
+              {hasPractical && (
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-slate-300 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    {scheme.practicalName || 'Practical / Lab'}:
+                  </span>
+                  <span className="font-bold text-emerald-300 font-mono">
+                    {calculation.practical.obtained.toFixed(2)} / {calculation.practical.max}
+                  </span>
+                </div>
               )}
             </div>
-          </div>
 
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
-            <span className="text-slate-400">Total Additional Activities:</span>
-            <span className="font-bold text-amber-400">
-              {components.reduce((sum, c) => sum + (calculateWeightedComponent(c.obtained, c.max, c.contribution) || 0), 0).toFixed(2)} Marks
-            </span>
-          </div>
-        </div>
-      </div>
+            {/* TOTAL CIA SCORE HERO DISPLAY */}
+            <div className="p-4 rounded-2xl bg-[#090B10] border border-white/[0.08] shadow-inner space-y-3">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    TOTAL CIA MARKS
+                  </span>
+                  <span className="text-3xl font-black text-white tracking-tight">
+                    {calculation.totalObtained.toFixed(2)}{' '}
+                    <span className="text-sm font-bold text-slate-400">/ {calculation.maxInternal}</span>
+                  </span>
+                </div>
 
-      {/* 5. FINAL INTERNAL MARKS SUMMARY TABLE & LEDGER */}
-      <div className="p-6 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
-          <div>
-            <h3 className="text-base font-black text-white">
-              Final Internal Assessment Scorecard
-            </h3>
-            <p className="text-xs text-slate-400">
-              Live calculation summary of all continuous evaluation components
-            </p>
-          </div>
+                <div className="text-right">
+                  <span className="text-lg font-black text-[#9AF04F]">
+                    {calculation.percentage.toFixed(1)}%
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-400 block">
+                    Internal Ratio
+                  </span>
+                </div>
+              </div>
 
-          {/* Weightage match check badge */}
-          <div>
-            {weightageMatchesTarget ? (
-              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" /> Component sum ({totalWeightageConfigured}M) matches Max CIA ({targetMaxInternal}M)
-              </span>
-            ) : (
-              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4" /> Component sum: {totalWeightageConfigured}M ≠ Target {targetMaxInternal}M
-              </span>
+              {/* Progress bar */}
+              <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#9AF04F] to-[#9655F5] rounded-full shadow-neon-sm transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.max(0, calculation.percentage))}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                <span>Remaining: <strong className="text-white">{calculation.remainingMarks.toFixed(2)}</strong></span>
+                <span className="text-[#9AF04F] font-semibold">
+                  {calculation.percentage >= 80 ? '✓ Excellent CIA Standing' : calculation.percentage >= 50 ? '✓ Passing Threshold Met' : '⚠ Action Needed'}
+                </span>
+              </div>
+            </div>
+
+            {/* Success toast message */}
+            {saveSuccessMsg && (
+              <div className="p-3 rounded-2xl bg-[#9AF04F]/15 border border-[#9AF04F]/40 text-[#9AF04F] text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{saveSuccessMsg}</span>
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Breakdown Table matching user's exact demonstration format */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm text-left">
-            <thead className="bg-[#151824] text-slate-400 uppercase text-[10px] font-bold tracking-wider">
-              <tr>
-                <th className="px-4 py-3 rounded-l-2xl">Component</th>
-                <th className="px-4 py-3">Raw Performance</th>
-                <th className="px-4 py-3">Formula / Scaling</th>
-                <th className="px-4 py-3 text-right rounded-r-2xl">Obtained Contribution</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              <tr className="hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#9AF04F]" /> CAT 1 Examination
-                </td>
-                <td className="px-4 py-3 text-slate-300">
-                  {cat1.obtained} / {cat1.max} ({cat1.max > 0 ? Math.round((cat1.obtained / cat1.max) * 100) : 0}%)
-                </td>
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                  ({cat1.obtained} / {cat1.max}) × {cat1.contribution}
-                </td>
-                <td className="px-4 py-3 text-right font-black text-[#9AF04F]">
-                  {calculation.cat1.weighted} / {cat1.contribution}
-                </td>
-              </tr>
-
-              <tr className="hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#9655F5]" /> CAT 2 Examination
-                </td>
-                <td className="px-4 py-3 text-slate-300">
-                  {cat2.obtained} / {cat2.max} ({cat2.max > 0 ? Math.round((cat2.obtained / cat2.max) * 100) : 0}%)
-                </td>
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                  ({cat2.obtained} / {cat2.max}) × {cat2.contribution}
-                </td>
-                <td className="px-4 py-3 text-right font-black text-[#C084FC]">
-                  {calculation.cat2.weighted} / {cat2.contribution}
-                </td>
-              </tr>
-
-              <tr className="hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Attendance Score
-                </td>
-                <td className="px-4 py-3 text-slate-300">
-                  {attendance.attended} / {attendance.conducted} classes ({calculation.attendance.percentage}%)
-                </td>
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs capitalize">
-                  {attendance.scheme} ({attendance.contribution}M cap)
-                </td>
-                <td className="px-4 py-3 text-right font-black text-emerald-400">
-                  {calculation.attendance.marksObtained} / {attendance.contribution}
-                </td>
-              </tr>
-
-              {calculation.components.map((comp) => (
-                <tr key={comp.id} className="hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" /> {comp.name}
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">
-                    {comp.obtained} / {comp.max} ({comp.max > 0 ? Math.round((comp.obtained / comp.max) * 100) : 0}%)
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                    ({comp.obtained} / {comp.max}) × {comp.contribution}
-                  </td>
-                  <td className="px-4 py-3 text-right font-black text-amber-400">
-                    {comp.weighted} / {comp.contribution}
-                  </td>
-                </tr>
-              ))}
-
-              {/* Total Summary Row */}
-              <tr className="bg-[#9AF04F]/10 font-bold">
-                <td className="px-4 py-4 font-black text-white text-sm" colSpan={3}>
-                  Total Internal Continuous Assessment Marks (CIA)
-                </td>
-                <td className="px-4 py-4 text-right font-black text-[#9AF04F] text-base sm:text-lg">
-                  {calculation.totalObtained} / {calculation.maxInternal}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* 4 Summary Metric Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">
-              Total CIA Obtained
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-[#9AF04F] mt-0.5 block">
-              {calculation.totalObtained}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">
-              Maximum Internal Cap
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-white mt-0.5 block">
-              {calculation.maxInternal}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">
-              Internal Percentage
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-[#9AF04F] mt-0.5 block">
-              {calculation.internalPercentage}%
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">
-              Remaining Available
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-slate-300 mt-0.5 block">
-              {calculation.remainingMarks} M
-            </span>
-          </div>
-        </div>
-
-        {/* Feedback message */}
-        {saveSuccessMsg && (
-          <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-            {saveSuccessMsg}
-          </div>
-        )}
-
-        {/* Bottom Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/[0.06]">
-          <Button
-            variant="dark"
-            size="sm"
-            icon={RefreshCw}
-            onClick={handleReset}
-          >
-            Reset Form
-          </Button>
-
-          <div className="flex items-center gap-2.5">
-            {onSwitchToEndSem && (
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
               <Button
-                variant="outline"
-                size="sm"
-                icon={ArrowRight}
-                iconPosition="right"
-                onClick={onSwitchToEndSem}
+                variant="neon"
+                size="md"
+                icon={Check}
+                onClick={handleApplyToSubject}
+                className="w-full font-bold shadow-neon-sm py-3"
               >
-                Proceed to End-Sem Calc
+                Apply to Subject CIA
               </Button>
-            )}
 
-            <Button
-              variant="neon"
-              size="sm"
-              icon={Check}
-              onClick={handleSaveAndApply}
-            >
-              Apply to Subject CIA
-            </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetMarks}
+                  className="flex-1 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Reset Marks
+                </button>
+
+                {onSwitchToEndSem && (
+                  <button
+                    type="button"
+                    onClick={onSwitchToEndSem}
+                    className="flex-1 py-2 rounded-xl bg-[#9655F5]/10 hover:bg-[#9655F5]/20 text-[#9655F5] border border-[#9655F5]/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" /> End-Sem Calc
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -334,6 +334,8 @@ export function AcademicProvider({ children }) {
         };
         if (config.attendance && config.attendance.percentage !== undefined) {
           updatePayload.attendance = config.attendance.percentage;
+        } else if (config.attendance && config.attendance.max > 0 && config.attendance.obtained !== undefined) {
+          updatePayload.attendance = Math.round((Number(config.attendance.obtained) / Number(config.attendance.max)) * 100);
         }
 
         if (semester5Subjects.some(s => s.id === subjectId)) {

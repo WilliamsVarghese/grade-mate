@@ -1,4 +1,4 @@
-import { getGradeFromPercentage } from './grading';
+import { getGradeFromPercentage } from './grading.js';
 
 /**
  * Calculate subject total, percentage, grade and grade points based on assessment scheme.
@@ -268,6 +268,98 @@ export function calculateInternalAssessmentBreakdown({
     totalObtained,
     maxInternal,
     internalPercentage,
+    remainingMarks,
+  };
+}
+
+/**
+ * Calculate converted CAT mark:
+ * Both CAT examinations are conducted out of 30 marks.
+ * Formula: CAT weighted mark = (Obtained CAT marks / 30) * CAT contribution
+ * Rounded to 2 decimal places.
+ *
+ * Examples:
+ * - CAT 1: 24/30, contribution 7.5 -> 6.00
+ * - CAT 2: 26/30, contribution 7.5 -> 6.50
+ * - CAT 1: 24/30, contribution 12.5 -> 10.00
+ * - CAT 2: 26/30, contribution 12.5 -> 10.83
+ */
+export function calculateCatContribution(obtainedMarks, catContribution) {
+  const obt = Math.max(0, Math.min(30, Number(obtainedMarks) || 0));
+  const contrib = Math.max(0, Number(catContribution) || 0);
+  const weighted = (obt / 30) * contrib;
+  return Math.round(weighted * 100) / 100;
+}
+
+/**
+ * Calculate simple syllabus-based CIA total:
+ * - Attendance: obtained / max
+ * - Assignment 1: obtained / max
+ * - Assignment 2 (optional): obtained / max
+ * - CAT 1: (obtained out of 30 / 30) * CAT 1 contribution
+ * - CAT 2: (obtained out of 30 / 30) * CAT 2 contribution
+ * - Practical / Lab (optional): obtained / max
+ */
+export function calculateSimpleInternalAssessment({
+  attendance = { obtained: 0, max: 10 },
+  assignment1 = { obtained: 0, max: 7.5 },
+  assignment2 = { enabled: true, obtained: 0, max: 7.5 },
+  cat1 = { obtained: 0, contribution: 12.5 },
+  cat2 = { obtained: 0, contribution: 12.5 },
+  practical = { enabled: false, name: 'Practical Component', obtained: 0, max: 25 },
+}) {
+  const attObtained = Math.min(Number(attendance.max) || 0, Math.max(0, Number(attendance.obtained) || 0));
+  const attMax = Math.max(0, Number(attendance.max) || 0);
+
+  const assign1Obtained = Math.min(Number(assignment1.max) || 0, Math.max(0, Number(assignment1.obtained) || 0));
+  const assign1Max = Math.max(0, Number(assignment1.max) || 0);
+
+  const hasAssign2 = !!assignment2.enabled;
+  const assign2Obtained = hasAssign2
+    ? Math.min(Number(assignment2.max) || 0, Math.max(0, Number(assignment2.obtained) || 0))
+    : 0;
+  const assign2Max = hasAssign2 ? Math.max(0, Number(assignment2.max) || 0) : 0;
+
+  const cat1ObtainedRaw = Math.min(30, Math.max(0, Number(cat1.obtained) || 0));
+  const cat1Contribution = Math.max(0, Number(cat1.contribution) || 0);
+  const cat1Converted = calculateCatContribution(cat1ObtainedRaw, cat1Contribution);
+
+  const cat2ObtainedRaw = Math.min(30, Math.max(0, Number(cat2.obtained) || 0));
+  const cat2Contribution = Math.max(0, Number(cat2.contribution) || 0);
+  const cat2Converted = calculateCatContribution(cat2ObtainedRaw, cat2Contribution);
+
+  const hasPractical = !!practical.enabled;
+  const practicalObtained = hasPractical
+    ? Math.min(Number(practical.max) || 0, Math.max(0, Number(practical.obtained) || 0))
+    : 0;
+  const practicalMax = hasPractical ? Math.max(0, Number(practical.max) || 0) : 0;
+
+  const totalObtained = Math.round(
+    (attObtained + assign1Obtained + assign2Obtained + cat1Converted + cat2Converted + practicalObtained) * 100
+  ) / 100;
+
+  const maxInternal = Math.round(
+    (attMax + assign1Max + assign2Max + cat1Contribution + cat2Contribution + practicalMax) * 100
+  ) / 100;
+
+  const percentage = maxInternal > 0 ? Math.min(100, Math.round((totalObtained / maxInternal) * 10000) / 100) : 0;
+  const remainingMarks = Math.max(0, Math.round((maxInternal - totalObtained) * 100) / 100);
+
+  return {
+    attendance: { obtained: attObtained, max: attMax },
+    assignment1: { obtained: assign1Obtained, max: assign1Max },
+    assignment2: { enabled: hasAssign2, obtained: assign2Obtained, max: assign2Max },
+    cat1: { obtained: cat1ObtainedRaw, converted: cat1Converted, contribution: cat1Contribution },
+    cat2: { obtained: cat2ObtainedRaw, converted: cat2Converted, contribution: cat2Contribution },
+    practical: {
+      enabled: hasPractical,
+      name: practical.name || 'Practical / Lab Work',
+      obtained: practicalObtained,
+      max: practicalMax
+    },
+    totalObtained,
+    maxInternal,
+    percentage,
     remainingMarks,
   };
 }

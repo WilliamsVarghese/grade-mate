@@ -24,8 +24,8 @@ export function MarksCalculatorModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Academic Calculation Engines"
-      subtitle="Comprehensive tools for Internal Assessment (CAT 1 & 2), End-Semester scaling, and overall subject grades."
+      title="Academic Calculation Suite"
+      subtitle="Simple and syllabus-accurate tools for Internal Assessment (CAT 1 & 2), End-Semester scaling, and overall course grades."
       maxWidth="max-w-4xl"
     >
       <div className="space-y-6">
