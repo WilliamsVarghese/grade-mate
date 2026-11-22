@@ -1,277 +1,217 @@
 import React, { useState, useMemo } from 'react';
 import {
-  BookOpen,
-  Plus,
   Search,
-  Calculator,
-  Award,
-  Layers,
-  ArrowUpRight,
-  ChevronRight,
-  Check,
-  Calendar,
-  Sparkles
+  Plus,
+  X,
+  Pin,
+  FileText,
 } from 'lucide-react';
 import { useAcademic } from '../context/AcademicContext';
-import { SubjectCard } from '../components/subjects/SubjectCard';
-import { SubjectModal } from '../components/subjects/SubjectModal';
-import { SubjectDetailModal } from '../components/subjects/SubjectDetailModal';
-import { MarksCalculatorModal } from '../components/subjects/MarksCalculatorModal';
-import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
+import { KeepNoteCard } from '../components/workspace/KeepNoteCard';
+import { KeepNoteModal } from '../components/workspace/KeepNoteModal';
 
 export function Semester5() {
   const {
-    semesters,
-    selectedSemesterId,
-    selectedSemester,
-    setSelectedSemesterId,
-    currentSemesterSubjects,
-    currentSemesterSGPA,
-    allSemestersSGPA,
-    addSubject,
-    updateSubject,
-    deleteSubject,
+    notes,
+    allSubjects,
+    addNote,
+    updateNote,
+    deleteNote,
+    togglePinNote,
   } = useAcademic();
 
+  // Search query
   const [searchTerm, setSearchTerm] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState(null);
-  const [viewingSubject, setViewingSubject] = useState(null);
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
-  const [calculatorTab, setCalculatorTab] = useState('internal');
-  const [calculatorSubjectId, setCalculatorSubjectId] = useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-  const openCalculator = (tab = 'internal', subjectId = null) => {
-    setCalculatorTab(tab);
-    setCalculatorSubjectId(subjectId);
-    setCalculatorOpen(true);
-  };
+  // Note Modal state
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
 
-  const filteredSubjects = useMemo(() => {
-    return currentSemesterSubjects.filter((s) => {
-      const q = searchTerm.toLowerCase();
-      return (
-        s.name.toLowerCase().includes(q) ||
-        (s.code && s.code.toLowerCase().includes(q))
-      );
+  // Search across all notes regardless of semester
+  const filteredNotes = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return notes;
+    }
+
+    const q = searchTerm.toLowerCase().trim();
+    return notes.filter((n) => {
+      const titleMatch = (n.title || '').toLowerCase().includes(q);
+      const contentMatch = (n.content || '').toLowerCase().includes(q);
+      const subjectMatch = (n.subjectName || '').toLowerCase().includes(q);
+      const codeMatch = (n.subjectCode || '').toLowerCase().includes(q);
+      return titleMatch || contentMatch || subjectMatch || codeMatch;
     });
-  }, [currentSemesterSubjects, searchTerm]);
+  }, [notes, searchTerm]);
 
-  const handleOpenAdd = () => {
-    setEditingSubject(null);
-    setModalOpen(true);
+  // Partition into Pinned and Others (Google Keep style)
+  const pinnedNotes = useMemo(() => {
+    return filteredNotes.filter((n) => !!n.isPinned);
+  }, [filteredNotes]);
+
+  const otherNotes = useMemo(() => {
+    return filteredNotes.filter((n) => !n.isPinned);
+  }, [filteredNotes]);
+
+  // Open note for editing
+  const handleOpenNote = (note) => {
+    setEditingNote(note);
+    setNoteModalOpen(true);
   };
 
-  const handleOpenEdit = (subject) => {
-    setEditingSubject(subject);
-    setModalOpen(true);
+  // Open blank note editor
+  const handleOpenNewNote = () => {
+    setEditingNote(null);
+    setNoteModalOpen(true);
   };
 
-  const handleSaveSubject = (data) => {
-    if (editingSubject) {
-      updateSubject(editingSubject.id, data, selectedSemesterId);
+  // Save note (Add or Update)
+  const handleSaveNote = (payload) => {
+    if (editingNote) {
+      updateNote(editingNote.id, payload);
     } else {
-      addSubject(data, selectedSemesterId);
+      addNote(payload);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* 8-SEMESTER TAB BAR */}
-      <div className="p-1.5 rounded-3xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
-        {semesters.map((sem) => {
-          const isSelected = sem.id === selectedSemesterId;
-          const semMetric = allSemestersSGPA.find(s => s.id === sem.id);
-          const hasSGPA = semMetric && semMetric.isEvaluated;
-
-          return (
-            <button
-              key={sem.id}
-              type="button"
-              onClick={() => setSelectedSemesterId(sem.id)}
-              className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-2xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                isSelected
-                  ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                  : 'bg-white/[0.02] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08]'
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span>{sem.name}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-              </div>
-              <span className={`text-[10px] font-mono ${isSelected ? 'text-[#0A0D06]/85 font-black' : 'text-slate-500'}`}>
-                {hasSGPA ? `${semMetric.sgpa} SGPA` : `${semMetric?.subjectsCount || 0} Courses`}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#9AF04F]">
-              Curriculum Core
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
-            <span className="text-xs text-slate-400">{selectedSemester.academicYear} • B.Tech CSE</span>
-          </div>
+    <div className="space-y-6 pb-20 max-w-6xl mx-auto animate-fadeIn">
+      {/* 1. SIMPLE HEADER TITLED "Notes" */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2.5">
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {selectedSemester.name} – Regular Curriculum Subjects
+            Notes
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Track subjects, internal assessment (CIA), end-semester (ESE) marks, credits, and SGPA for {selectedSemester.name}.
-          </p>
+          {notes.length > 0 && (
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-400">
+              {notes.length}
+            </span>
+          )}
         </div>
+      </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <Button
-            variant="dark"
-            size="sm"
-            icon={Calculator}
-            onClick={() => openCalculator('internal')}
+      {/* 2. SEARCH BAR: "Search your notes..." */}
+      <div className="relative max-w-2xl mx-auto">
+        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search your notes..."
+          className="w-full pl-11 pr-10 py-3 rounded-2xl bg-[#12141F] border border-white/[0.08] hover:border-white/[0.15] text-white placeholder:text-slate-500 focus:outline-none focus:border-[#9AF04F] text-sm shadow-md transition-colors"
+        />
+        {searchTerm && (
+          <button
+            type="button"
+            onClick={() => setSearchTerm('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
           >
-            Marks Calc
-          </Button>
-          <Button
-            variant="neon"
-            size="sm"
-            icon={Plus}
-            onClick={handleOpenAdd}
-          >
-            Add Subject
-          </Button>
-        </div>
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      {/* Semester Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 rounded-3xl bg-[#11131B] border border-white/[0.07] shadow-card-dark">
-        <div>
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-            {selectedSemester.shortName} SGPA
+      {/* 3. GOOGLE KEEP QUICK NOTE INPUT BAR */}
+      <div className="max-w-xl mx-auto">
+        <div
+          onClick={handleOpenNewNote}
+          className="bg-[#12141F] hover:bg-[#151826] border border-white/[0.08] hover:border-white/[0.2] rounded-2xl px-5 py-3.5 flex items-center justify-between cursor-pointer shadow-md transition-all group"
+        >
+          <span className="text-sm text-slate-400 group-hover:text-slate-300">
+            Take a note...
           </span>
-          <span className="text-3xl font-black text-[#9AF04F] mt-0.5 block">
-            {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'}{' '}
-            <span className="text-xs font-bold text-slate-500">/ 10</span>
-          </span>
-        </div>
-        <div>
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-            Registered Credits
-          </span>
-          <span className="text-3xl font-black text-white mt-0.5 block">
-            {currentSemesterSGPA.totalCredits}
-          </span>
-        </div>
-        <div>
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-            Weighted Points
-          </span>
-          <span className="text-3xl font-black text-[#9655F5] mt-0.5 block">
-            {currentSemesterSGPA.totalWeightedPoints}
-          </span>
-        </div>
-        <div>
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-            Enrolled Courses
-          </span>
-          <span className="text-3xl font-black text-white mt-0.5 block">
-            {currentSemesterSubjects.length}
+          <span className="text-xs font-semibold text-[#9AF04F] bg-[#9AF04F]/10 px-2.5 py-1 rounded-lg">
+            + New Note
           </span>
         </div>
       </div>
 
-      {/* Search and Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder={`Search ${selectedSemester.shortName} courses or code...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-xs sm:text-sm pl-11 pr-4 py-2.5 rounded-full bg-[#141724] border border-white/[0.08] text-white placeholder:text-slate-500 focus:outline-none focus:border-[#9AF04F]"
-          />
-        </div>
-
-        <div className="text-xs font-semibold text-slate-400 self-end sm:self-center">
-          Showing {filteredSubjects.length} of {currentSemesterSubjects.length} courses in {selectedSemester.name}
-        </div>
-      </div>
-
-      {/* Subjects Grid */}
-      {filteredSubjects.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl border border-dashed border-white/[0.1] bg-[#11131B]/50">
-          <BookOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-white">
-            {searchTerm ? 'No matching subjects found' : `No subjects added for ${selectedSemester.name}`}
+      {/* 4. NOTES DISPLAYED AS COMPACT CARDS IN RESPONSIVE GRID */}
+      {filteredNotes.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl border border-dashed border-white/[0.08] max-w-md mx-auto my-8">
+          <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-white">
+            {searchTerm ? 'No matching notes found' : 'No notes yet'}
           </h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4 max-w-sm mx-auto">
+          <p className="text-xs text-slate-400 mt-1 mb-4">
             {searchTerm
-              ? 'Try adjusting your search query.'
-              : `Add subjects for ${selectedSemester.name} to calculate its SGPA and track credits towards your B.Tech degree.`}
+              ? 'Try searching with different keywords.'
+              : 'Add your study notes, formulas, quick reminders or coursework points.'}
           </p>
-          <Button variant="neon" size="sm" icon={Plus} onClick={handleOpenAdd}>
-            Add First Subject to {selectedSemester.name}
-          </Button>
+          <button
+            type="button"
+            onClick={handleOpenNewNote}
+            className="px-4 py-2 rounded-xl bg-[#9AF04F] text-[#0A0D06] text-xs font-black shadow-neon-sm hover:bg-[#8DE840] transition-colors"
+          >
+            Create Note
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredSubjects.map((sub) => (
-            <SubjectCard
-              key={sub.id}
-              subject={sub}
-              onViewDetails={(s) => setViewingSubject(s)}
-              onEdit={(s) => handleOpenEdit(s)}
-              onDelete={(id) => setDeleteConfirmId(id)}
-              onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
-              onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
-            />
-          ))}
+        <div className="space-y-6">
+          {/* PINNED NOTES SECTION */}
+          {pinnedNotes.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                <Pin className="w-3 h-3 text-[#9AF04F] fill-current" />
+                <span>Pinned ({pinnedNotes.length})</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                {pinnedNotes.map((note) => (
+                  <KeepNoteCard
+                    key={note.id}
+                    note={note}
+                    onOpen={handleOpenNote}
+                    onTogglePin={togglePinNote}
+                    onDelete={deleteNote}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* OTHER NOTES SECTION */}
+          {otherNotes.length > 0 && (
+            <div className="space-y-3">
+              {pinnedNotes.length > 0 && (
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                  <span>Others ({otherNotes.length})</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                {otherNotes.map((note) => (
+                  <KeepNoteCard
+                    key={note.id}
+                    note={note}
+                    onOpen={handleOpenNote}
+                    onTogglePin={togglePinNote}
+                    onDelete={deleteNote}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Add / Edit Subject Modal */}
-      <SubjectModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSaveSubject}
-        subjectToEdit={editingSubject}
-        sectionTitle={`${selectedSemester.name} Subject`}
-      />
+      {/* 5. FLOATING "+" BUTTON (Mobile First) */}
+      <button
+        type="button"
+        onClick={handleOpenNewNote}
+        className="fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full bg-[#9AF04F] hover:bg-[#8DE840] text-[#0A0D06] flex items-center justify-center shadow-neon-glow active:scale-95 transition-all"
+        title="Create Note"
+      >
+        <Plus className="w-7 h-7 stroke-[3]" />
+      </button>
 
-      {/* View Subject Details Modal */}
-      <SubjectDetailModal
-        isOpen={!!viewingSubject}
-        onClose={() => setViewingSubject(null)}
-        subject={viewingSubject}
-        onEdit={(s) => handleOpenEdit(s)}
-        onDelete={(id) => setDeleteConfirmId(id)}
-        onOpenInternalCalc={(subId) => openCalculator('internal', subId)}
-        onOpenEndSemCalc={(subId) => openCalculator('endsem', subId)}
-      />
-
-      {/* Marks Calculator Modal */}
-      <MarksCalculatorModal
-        isOpen={calculatorOpen}
-        onClose={() => setCalculatorOpen(false)}
-        initialTab={calculatorTab}
-        initialSubjectId={calculatorSubjectId}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={!!deleteConfirmId}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={() => {
-          if (deleteConfirmId) deleteSubject(deleteConfirmId, selectedSemesterId);
-        }}
-        title="Delete Subject"
-        message={`Are you sure you want to remove this subject from ${selectedSemester.name}? All marks, grades, and records for this subject will be removed.`}
+      {/* 6. SIMPLE NOTE EDITOR MODAL */}
+      <KeepNoteModal
+        isOpen={noteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
+        onSave={handleSaveNote}
+        onDelete={deleteNote}
+        noteToEdit={editingNote}
+        allSubjects={allSubjects}
       />
     </div>
   );

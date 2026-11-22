@@ -253,3 +253,175 @@ export const INITIAL_ACTIVITIES = [
     type: 'settings',
   },
 ];
+
+export const INITIAL_NOTES = [
+  {
+    id: 'note-1',
+    subjectId: 's5-1',
+    semesterId: 'sem-5',
+    subjectName: 'Computer Networks',
+    subjectCode: 'CS301',
+    title: 'Computer Networks – OSPF Revision',
+    content: `Key points for CAT 2 Revision:
+• OSPF (Open Shortest Path First) uses Dijkstra's Link-State algorithm.
+• Metric is Cost, inversely proportional to interface bandwidth.
+• Areas: Area 0 (Backbone Area), Standard Area, Stub Area, NSSA.
+• Router types:
+  - Internal Router (all interfaces within same area)
+  - Area Border Router (ABR - connects non-backbone area to Area 0)
+  - Autonomous System Boundary Router (ASBR - redistributes external routes)
+• 5 OSPF Packet Types: Hello, DBD (Database Description), LSR (Link State Request), LSU (Link State Update), LSAck.
+• Convergence is rapid with no routing loops.`,
+    tags: ['CAT 2 Revision', 'Exam Preparation', 'Unit 2'],
+    isPinned: true,
+    createdAt: '2026-11-20T10:30:00.000Z',
+    updatedAt: '2026-11-22T14:15:00.000Z',
+    hasReminder: true,
+    reminder: {
+      id: 'rem-1',
+      date: '2026-11-25',
+      time: '19:00',
+      notificationTitle: 'Computer Networks – OSPF Revision',
+      notificationMessage: 'Revise OSPF routing notes for Computer Networks.',
+      isCompleted: false,
+      notified: false,
+      createdAt: '2026-11-20T10:30:00.000Z',
+    },
+  },
+  {
+    id: 'note-2',
+    subjectId: 's5-1',
+    semesterId: 'sem-5',
+    subjectName: 'Computer Networks',
+    subjectCode: 'CS301',
+    title: 'Unit 1 Important Questions',
+    content: `Module 1 Essential Exam Questions:
+1. Explain the 7-Layer OSI Reference Model in detail with functions and PDU of each layer.
+2. Differentiate between Connection-Oriented (TCP) and Connectionless (UDP) services.
+3. Framing Mechanisms:
+   - Character Count
+   - Byte Stuffing (Flag byte with escape sequences)
+   - Bit Stuffing (Insert 0 after five consecutive 1s)
+4. Error Control:
+   - CRC (Cyclic Redundancy Check) calculation steps. Practice polynomial x^4 + x + 1.
+   - Hamming Code single-bit error correction formula: 2^p >= m + p + 1.
+5. Flow Control: Stop-and-Wait ARQ vs Go-Back-N ARQ vs Selective Repeat ARQ window sizes.`,
+    tags: ['Unit 1 Important Questions', 'Exam Preparation'],
+    isPinned: true,
+    createdAt: '2026-11-15T09:00:00.000Z',
+    updatedAt: '2026-11-18T16:20:00.000Z',
+    hasReminder: false,
+  },
+  {
+    id: 'note-3',
+    subjectId: 's5-1',
+    semesterId: 'sem-5',
+    subjectName: 'Computer Networks',
+    subjectCode: 'CS301',
+    title: 'Assignment 1 – Subnetting Calculation & VLSM',
+    content: `Given IP Address: 192.168.10.0 /24
+Required Subnets:
+• Subnet A: 60 hosts -> Needs 6 bits for hosts (2^6 - 2 = 62). Subnet Mask: /26 (255.255.255.192). Range: .1 to .62
+• Subnet B: 30 hosts -> Needs 5 bits for hosts (2^5 - 2 = 30). Subnet Mask: /27 (255.255.255.224). Range: .65 to .94
+• Subnet C: 20 hosts -> Needs 5 bits for hosts. Subnet Mask: /27 (255.255.255.224). Range: .97 to .126
+• Subnet D: 10 hosts -> Needs 4 bits for hosts. Subnet Mask: /28 (255.255.255.240). Range: .129 to .142
+
+Submission Deadline: Due Friday on college portal.`,
+    tags: ['Assignment 1', 'Subnetting'],
+    isPinned: false,
+    createdAt: '2026-11-18T11:45:00.000Z',
+    updatedAt: '2026-11-18T11:45:00.000Z',
+    hasReminder: true,
+    reminder: {
+      id: 'rem-2',
+      date: '2026-11-23',
+      time: '17:00',
+      notificationTitle: 'Submit Assignment 1 – Subnetting',
+      notificationMessage: 'Upload Computer Networks Assignment 1 VLSM sheet before 5 PM deadline.',
+      isCompleted: false,
+      notified: false,
+      createdAt: '2026-11-18T11:45:00.000Z',
+    },
+  },
+  {
+    id: 'note-4',
+    subjectId: 's5-2',
+    semesterId: 'sem-5',
+    subjectName: 'Software Engineering',
+    subjectCode: 'CS303',
+    title: 'Agile & Scrum Framework Summary',
+    content: `Core Agile Principles & Scrum Ceremonies:
+• Agile Manifesto: Individuals and interactions over processes and tools, Working software over comprehensive documentation.
+• 4 Scrum Ceremonies:
+  1. Sprint Planning: Estimate user story points, define sprint backlog and sprint goal.
+  2. Daily Scrum (Standup): 15-minute sync on yesterday, today, and blockers.
+  3. Sprint Review: Live demonstration of shippable increment to product owner.
+  4. Sprint Retrospective: Continuous improvement review (What went well? What didn't?).
+• User Story formula: As a <type of user>, I want <some goal> so that <benefit>.
+• INVEST criteria: Independent, Negotiable, Valuable, Estimable, Small, Testable.`,
+    tags: ['CAT 2 Revision', 'Unit 2'],
+    isPinned: true,
+    createdAt: '2026-11-16T14:00:00.000Z',
+    updatedAt: '2026-11-19T10:10:00.000Z',
+    hasReminder: false,
+  },
+  {
+    id: 'note-5',
+    subjectId: 's5-4',
+    semesterId: 'sem-5',
+    subjectName: 'Machine Learning',
+    subjectCode: 'CS305',
+    title: 'Gradient Descent & Cost Functions Derivation',
+    content: `Key ML Formulas for Unit 1:
+• Mean Squared Error Cost: J(w,b) = (1 / 2m) * sum((y_pred - y)^2)
+• Update rule: w = w - alpha * (dJ / dw)
+• Learning rate alpha considerations:
+  - If too small: extremely slow convergence.
+  - If too large: overshoots minimum, oscillates or diverges.
+• Feature Normalization:
+  - Z-score: (x - mu) / sigma
+  - Min-Max Scaling: (x - min) / (max - min)
+• Classification: Cross-entropy loss L = - [y * log(y_hat) + (1 - y) * log(1 - y_hat)]`,
+    tags: ['Exam Preparation', 'Unit 1'],
+    isPinned: false,
+    createdAt: '2026-11-12T16:30:00.000Z',
+    updatedAt: '2026-11-17T09:20:00.000Z',
+    hasReminder: true,
+    reminder: {
+      id: 'rem-3',
+      date: '2026-11-24',
+      time: '08:30',
+      notificationTitle: 'Machine Learning – Gradient Descent Formulas',
+      notificationMessage: 'Quick formula revision before ML morning tutorial.',
+      isCompleted: false,
+      notified: false,
+      createdAt: '2026-11-12T16:30:00.000Z',
+    },
+  },
+  {
+    id: 'note-6',
+    subjectId: 's4-4',
+    semesterId: 'sem-4',
+    subjectName: 'Operating Systems',
+    subjectCode: 'CST206',
+    title: 'OS Security Module 3 – Access Control & Protection',
+    content: `Protection & Security Concepts:
+• Domain of Protection: Pair of (Object-name, Rights-set).
+• Access Matrix:
+  - Rows represent Domains (subjects).
+  - Columns represent Objects (files, memory, devices).
+• Implementation options:
+  - Access Control Lists (ACLs) - column-based.
+  - Capabilities Lists - row-based tickets.
+• DAC vs MAC vs RBAC:
+  - Discretionary Access Control: Owner decides permissions.
+  - Mandatory Access Control: System-enforced security clearances (Bell-LaPadula model).
+  - Role-Based Access Control: Access granted based on organizational roles.
+• Common vulnerability: Buffer Overflow and Stack Smashing defenses (ASLR, Stack Canaries, NX bit).`,
+    tags: ['OS Security Module 3', 'Exam Preparation'],
+    isPinned: false,
+    createdAt: '2026-05-10T11:00:00.000Z',
+    updatedAt: '2026-05-12T15:00:00.000Z',
+    hasReminder: false,
+  },
+];

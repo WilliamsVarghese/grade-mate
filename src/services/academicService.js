@@ -7,7 +7,8 @@ import {
   INITIAL_ELECTIVE_SUBJECTS,
   INITIAL_PAST_SEMESTERS,
   INITIAL_EXAMS,
-  INITIAL_ACTIVITIES
+  INITIAL_ACTIVITIES,
+  INITIAL_NOTES
 } from '../utils/initialData';
 
 const { KEYS } = storageService;
@@ -126,6 +127,14 @@ export const academicService = {
     storageService.setItem(KEYS.END_SEM_ASSESSMENTS, configs);
   },
 
+  // Student Notes & Reminders
+  getNotes: () => {
+    return storageService.getItem(KEYS.NOTES, INITIAL_NOTES);
+  },
+  saveNotes: (notes) => {
+    storageService.setItem(KEYS.NOTES, notes);
+  },
+
   // Reset to defaults
   resetToDefaults: () => {
     storageService.setItem(KEYS.SETTINGS, INITIAL_SETTINGS);
@@ -137,6 +146,7 @@ export const academicService = {
     storageService.setItem(KEYS.PAST_SEMESTERS, INITIAL_PAST_SEMESTERS);
     storageService.setItem(KEYS.EXAMS, INITIAL_EXAMS);
     storageService.setItem(KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
+    storageService.setItem(KEYS.NOTES, INITIAL_NOTES);
   },
 
   // Hard clear all data

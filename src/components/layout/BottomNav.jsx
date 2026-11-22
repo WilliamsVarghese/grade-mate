@@ -23,7 +23,7 @@ export function BottomNav({ onQuickAction }) {
     { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
     { 
       to: '/semesters', 
-      label: selectedSemester?.shortName || 'Sem', 
+      label: 'Notes', 
       icon: BookOpen,
       customActive: isCurriculumActive
     },

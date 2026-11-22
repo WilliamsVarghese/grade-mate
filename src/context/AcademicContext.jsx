@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { academicService } from '../services/academicService';
 import { storageService } from '../services/storageService';
+import { notificationService } from '../services/notificationService';
 import { calculateSubjectMarks, calculateSGPA } from '../utils/calculations';
-import { INITIAL_SETTINGS, SEMESTERS } from '../utils/initialData';
+import { INITIAL_SETTINGS, SEMESTERS, INITIAL_NOTES } from '../utils/initialData';
 
 const AcademicContext = createContext();
 
@@ -18,6 +19,7 @@ export function AcademicProvider({ children }) {
   const [activities, setActivities] = useState(() => academicService.getActivities());
   const [internalAssessments, setInternalAssessments] = useState(() => academicService.getInternalAssessments());
   const [endSemAssessments, setEndSemAssessments] = useState(() => academicService.getEndSemAssessments());
+  const [notes, setNotes] = useState(() => academicService.getNotes());
 
   // Save to storage whenever state changes
   useEffect(() => {
@@ -31,6 +33,10 @@ export function AcademicProvider({ children }) {
   useEffect(() => {
     academicService.saveSemestersData(semestersData);
   }, [semestersData]);
+
+  useEffect(() => {
+    academicService.saveNotes(notes);
+  }, [notes]);
 
   useEffect(() => {
     academicService.saveMinorSubjects(minorSubjects);
@@ -327,7 +333,8 @@ export function AcademicProvider({ children }) {
     setPastSemesters(academicService.getPastSemesters());
     setExams(academicService.getExams());
     setActivities(academicService.getActivities());
-    logActivity('System Reset', 'All 8 semesters reset to default curriculum data', 'settings');
+    setNotes(academicService.getNotes());
+    logActivity('System Reset', 'All 8 semesters reset to default curriculum and notes', 'settings');
   }, [logActivity]);
 
   const clearAllData = useCallback(() => {
@@ -342,6 +349,7 @@ export function AcademicProvider({ children }) {
     setPastSemesters([]);
     setExams([]);
     setActivities([]);
+    setNotes([]);
     logActivity('Data Cleared', 'All academic records purged', 'delete');
   }, [logActivity]);
 
@@ -370,6 +378,7 @@ export function AcademicProvider({ children }) {
       setPastSemesters(academicService.getPastSemesters());
       setExams(academicService.getExams());
       setActivities(academicService.getActivities());
+      setNotes(academicService.getNotes());
       logActivity('Backup Restored', 'Restored records from JSON backup', 'settings');
     }
     return res;
@@ -576,6 +585,219 @@ export function AcademicProvider({ children }) {
     }
   }, [allSubjects, minorSubjects, electiveSubjects, updateMinorSubject, updateElectiveSubject, updateSubject, logActivity]);
 
+  // ---- STUDENT NOTES & REMINDERS CRUD ----
+  const addNote = useCallback((noteData) => {
+    const newNote = {
+      ...noteData,
+      id: noteData.id || `note-${Date.now()}`,
+      createdAt: noteData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isPinned: !!noteData.isPinned,
+      tags: Array.isArray(noteData.tags) ? noteData.tags : [],
+    };
+
+    if (newNote.hasReminder && newNote.reminder) {
+      newNote.reminder = {
+        ...newNote.reminder,
+        id: newNote.reminder.id || `rem-${Date.now()}`,
+        isCompleted: false,
+        notified: false,
+        createdAt: newNote.reminder.createdAt || new Date().toISOString(),
+      };
+    }
+
+    setNotes((prev) => [newNote, ...prev]);
+    logActivity('Note Added', `Created note: "${newNote.title}" for ${newNote.subjectName || 'Subject'}`, 'notes');
+    return newNote;
+  }, [logActivity]);
+
+  const updateNote = useCallback((noteId, updatedFields) => {
+    setNotes((prev) =>
+      prev.map((n) => {
+        if (n.id !== noteId) return n;
+        const merged = {
+          ...n,
+          ...updatedFields,
+          updatedAt: new Date().toISOString(),
+        };
+
+        // If reminder was modified, check if date/time changed to reset notified
+        if (merged.hasReminder && merged.reminder) {
+          const prevRem = n.reminder || {};
+          const isDateChanged = prevRem.date !== merged.reminder.date || prevRem.time !== merged.reminder.time;
+          if (isDateChanged) {
+            merged.reminder.notified = false;
+          }
+        }
+        return merged;
+      })
+    );
+    logActivity('Note Updated', `Updated note: "${updatedFields.title || 'Note'}"`, 'notes');
+  }, [logActivity]);
+
+  const deleteNote = useCallback((noteId) => {
+    setNotes((prev) => {
+      const target = prev.find((n) => n.id === noteId);
+      if (target) {
+        logActivity('Note Deleted', `Removed note: "${target.title}"`, 'delete');
+      }
+      return prev.filter((n) => n.id !== noteId);
+    });
+  }, [logActivity]);
+
+  const togglePinNote = useCallback((noteId) => {
+    setNotes((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, isPinned: !n.isPinned } : n))
+    );
+  }, []);
+
+  const toggleReminderCompletion = useCallback((noteId) => {
+    setNotes((prev) =>
+      prev.map((n) => {
+        if (n.id !== noteId || !n.reminder) return n;
+        const willComplete = !n.reminder.isCompleted;
+        logActivity(
+          willComplete ? 'Reminder Completed' : 'Reminder Reopened',
+          `"${n.reminder.notificationTitle || n.title}"`,
+          'reminder'
+        );
+        return {
+          ...n,
+          reminder: {
+            ...n.reminder,
+            isCompleted: willComplete,
+          },
+        };
+      })
+    );
+  }, [logActivity]);
+
+  const deleteReminder = useCallback((noteId) => {
+    setNotes((prev) =>
+      prev.map((n) => {
+        if (n.id !== noteId) return n;
+        return {
+          ...n,
+          hasReminder: false,
+          reminder: undefined,
+        };
+      })
+    );
+    logActivity('Reminder Deleted', 'Reminder removed from note', 'delete');
+  }, [logActivity]);
+
+  // Periodic reminder checking for browser notifications and audio chime
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      setNotes((prev) => {
+        let changed = false;
+        const next = prev.map((n) => {
+          if (!n.hasReminder || !n.reminder || n.reminder.isCompleted || n.reminder.notified) {
+            return n;
+          }
+          if (!n.reminder.date) return n;
+
+          const [hours, minutes] = (n.reminder.time || '00:00').split(':').map(Number);
+          const reminderDate = new Date(n.reminder.date);
+          reminderDate.setHours(hours || 0, minutes || 0, 0, 0);
+
+          if (reminderDate <= now) {
+            changed = true;
+            notificationService.sendNotification(
+              n.reminder.notificationTitle || n.title,
+              {
+                body: n.reminder.notificationMessage || `Reminder for ${n.subjectName || 'your course'}`,
+                tag: n.reminder.id,
+              }
+            );
+
+            // Emit custom event for in-app banner/toast if needed
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(
+                new CustomEvent('grademate:reminder_fired', {
+                  detail: {
+                    noteId: n.id,
+                    title: n.reminder.notificationTitle || n.title,
+                    message: n.reminder.notificationMessage || `Reminder for ${n.subjectName || 'your course'}`,
+                    subjectName: n.subjectName,
+                  },
+                })
+              );
+            }
+
+            return {
+              ...n,
+              reminder: {
+                ...n.reminder,
+                notified: true,
+              },
+            };
+          }
+          return n;
+        });
+
+        return changed ? next : prev;
+      });
+    };
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Compute all reminders list with dynamic status
+  const allReminders = useMemo(() => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const list = [];
+    notes.forEach((note) => {
+      if (note.hasReminder && note.reminder) {
+        const rem = note.reminder;
+        let status = 'upcoming';
+
+        if (rem.isCompleted) {
+          status = 'completed';
+        } else {
+          const [hours, minutes] = (rem.time || '00:00').split(':').map(Number);
+          const remDateTime = new Date(rem.date);
+          remDateTime.setHours(hours || 0, minutes || 0, 0, 0);
+
+          if (remDateTime < now) {
+            status = 'overdue';
+          } else if (rem.date === todayStr) {
+            status = 'today';
+          } else {
+            status = 'upcoming';
+          }
+        }
+
+        list.push({
+          ...rem,
+          noteId: note.id,
+          noteTitle: note.title,
+          noteTags: note.tags,
+          subjectId: note.subjectId,
+          subjectName: note.subjectName,
+          subjectCode: note.subjectCode,
+          semesterId: note.semesterId,
+          status,
+        });
+      }
+    });
+
+    const priority = { overdue: 1, today: 2, upcoming: 3, completed: 4 };
+    list.sort((a, b) => {
+      if (priority[a.status] !== priority[b.status]) {
+        return priority[a.status] - priority[b.status];
+      }
+      return `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`);
+    });
+
+    return list;
+  }, [notes]);
+
   const value = {
     settings,
     semesters: SEMESTERS,
@@ -589,6 +811,16 @@ export function AcademicProvider({ children }) {
     addSubject,
     updateSubject,
     deleteSubject,
+    // Student Notes & Reminders
+    notes,
+    addNote,
+    updateNote,
+    deleteNote,
+    togglePinNote,
+    toggleReminderCompletion,
+    deleteReminder,
+    allReminders,
+    notificationService,
     // Legacy Semester 5 compatibility
     semester5Subjects,
     semester5SGPA,

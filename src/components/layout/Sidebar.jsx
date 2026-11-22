@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAcademic } from '../../context/AcademicContext';
 
-export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
+export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
   const {
     selectedSemester,
     currentSemesterSubjects,
@@ -22,6 +22,7 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
     electiveSubjects,
     cumulativeCGPA,
     settings,
+    notes = [],
   } = useAcademic();
 
   const navItems = [
@@ -33,9 +34,9 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
     },
     {
       to: '/semester-5',
-      label: selectedSemester.name,
+      label: 'Notes',
       icon: BookOpen,
-      badge: `${currentSemesterSubjects.length}`,
+      badge: notes.length ? `${notes.length}` : undefined,
       badgeColor: 'bg-white/10 text-white',
     },
     {
@@ -81,9 +82,8 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#090A10] border-r border-white/[0.06] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#090A10] border-r border-white/[0.06] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Brand Header */}
         <div className="h-20 px-6 flex items-center justify-between border-b border-white/[0.06] shrink-0">
@@ -146,10 +146,9 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
                 end={item.end}
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `group flex items-center justify-between px-4 py-3 rounded-full text-sm font-semibold transition-all ${
-                    isActive
-                      ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                  `group flex items-center justify-between px-4 py-3 rounded-full text-sm font-semibold transition-all ${isActive
+                    ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
                   }`
                 }
               >
@@ -157,11 +156,10 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
                   <>
                     <div className="flex items-center gap-3 truncate">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                          isActive
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isActive
                             ? 'bg-[#0A0D06]/15 text-[#0A0D06]'
                             : 'bg-white/[0.05] text-slate-400 group-hover:text-white group-hover:bg-white/[0.1]'
-                        }`}
+                          }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
@@ -169,11 +167,10 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }) {
                     </div>
                     {item.badge !== undefined && (
                       <span
-                        className={`text-xs px-2.5 py-0.5 rounded-full font-bold shrink-0 ${
-                          isActive
+                        className={`text-xs px-2.5 py-0.5 rounded-full font-bold shrink-0 ${isActive
                             ? 'bg-[#0A0D06] text-[#9AF04F]'
                             : item.badgeColor
-                        }`}
+                          }`}
                       >
                         {item.badge}
                       </span>
