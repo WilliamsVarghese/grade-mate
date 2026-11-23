@@ -20,10 +20,10 @@ export function ConfirmDialog({
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-500/10 text-rose-400 mb-4 border border-rose-500/20">
           <AlertTriangle className="h-7 w-7" />
         </div>
-        <h3 className="text-lg font-bold text-white">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
           {title}
         </h3>
-        <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
           {message}
         </p>
 

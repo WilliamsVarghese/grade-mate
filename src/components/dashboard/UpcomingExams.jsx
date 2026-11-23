@@ -88,29 +88,29 @@ export function UpcomingExams() {
             exams.map((exam) => (
               <div
                 key={exam.id}
-                className="group p-3.5 rounded-2xl border border-white/[0.05] bg-[#151824] hover:border-[#9AF04F]/40 transition-all flex items-start justify-between gap-3"
+                className="group p-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-[#151824] hover:border-[#9AF04F]/40 transition-all flex items-start justify-between gap-3"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#9AF04F]/10 text-[#9AF04F] border border-[#9AF04F]/20 flex flex-col items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-[#9AF04F]/10 text-emerald-800 dark:text-[#9AF04F] border border-[#9AF04F]/20 flex flex-col items-center justify-center shrink-0">
                     <span className="text-[10px] font-black uppercase leading-none">
                       {exam.date ? new Date(exam.date).toLocaleString('default', { month: 'short' }) : 'EXAM'}
                     </span>
-                    <span className="text-base font-black leading-none mt-1 text-white">
+                    <span className="text-base font-black leading-none mt-1 text-slate-900 dark:text-white">
                       {exam.date ? new Date(exam.date).getDate() : '--'}
                     </span>
                   </div>
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-xs sm:text-sm font-bold text-white truncate">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                         {exam.subject}
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300">
                         {exam.type}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1 flex-wrap">
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
                       {exam.time && (
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3 text-[#9AF04F]" />
@@ -131,7 +131,7 @@ export function UpcomingExams() {
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(exam)}
-                    className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-slate-300 dark:hover:bg-white/[0.1] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors"
                     title="Edit exam"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -139,7 +139,7 @@ export function UpcomingExams() {
                   <button
                     type="button"
                     onClick={() => deleteExam(exam.id)}
-                    className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-full bg-slate-200 dark:bg-white/[0.05] hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors"
                     title="Delete exam"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

@@ -9,10 +9,8 @@
   }
 
   body {
-    @apply antialiased bg-[#08090C] text-slate-100 min-h-screen selection:bg-[#9AF04F] selection:text-[#090d04];
+    @apply antialiased min-h-screen selection:bg-[#9AF04F] selection:text-[#090d04] bg-slate-50 dark:bg-[#08090C] text-slate-900 dark:text-slate-100 transition-colors duration-200;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background-color: #08090C;
-    color: #F1F5F9;
   }
 
   /* Custom fintech scrollbars */
@@ -21,11 +19,14 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #08090C;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1F2330;
+    background: #CBD5E1;
     border-radius: 9999px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #1F2330;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #9AF04F;

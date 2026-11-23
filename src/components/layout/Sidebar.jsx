@@ -82,25 +82,25 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#090A10] border-r border-white/[0.06] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white dark:bg-[#090A10] border-r border-slate-200 dark:border-white/[0.06] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
         {/* Brand Header */}
-        <div className="h-20 px-6 flex items-center justify-between border-b border-white/[0.06] shrink-0">
+        <div className="h-20 px-6 flex items-center justify-between border-b border-slate-200 dark:border-white/[0.06] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#9AF04F] flex items-center justify-center text-[#0A0D06] shadow-neon-sm">
               <GraduationCap className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight text-white">
+                <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
                   GradeMate
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#9AF04F] text-[#0A0D06]">
                   PRO
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-400">
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Academic Performance
               </p>
             </div>
@@ -109,16 +109,16 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
 
         {/* Quick Academic Balance Pill in Sidebar */}
         <div className="px-5 pt-5 pb-2">
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#121520] to-[#0D0F18] border border-white/[0.08] flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-gradient-to-br dark:from-[#121520] dark:to-[#0D0F18] border border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Current Standing
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="text-xl font-black text-white tracking-tight">
+                <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                   {cumulativeCGPA.cgpa}
                 </span>
-                <span className="text-xs text-slate-400 font-semibold">CGPA</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">CGPA</span>
               </div>
             </div>
             <div className="text-right">
@@ -148,7 +148,7 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
                 className={({ isActive }) =>
                   `group flex items-center justify-between px-4 py-3 rounded-full text-sm font-semibold transition-all ${isActive
                     ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
                   }`
                 }
               >
@@ -158,7 +158,7 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isActive
                             ? 'bg-[#0A0D06]/15 text-[#0A0D06]'
-                            : 'bg-white/[0.05] text-slate-400 group-hover:text-white group-hover:bg-white/[0.1]'
+                            : 'bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:bg-slate-200 dark:group-hover:bg-white/[0.1]'
                           }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -183,11 +183,11 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
         </div>
 
         {/* Student Profile Pill at Footer */}
-        <div className="p-4 border-t border-white/[0.06] shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-white/[0.06] shrink-0">
           <NavLink
             to="/settings"
             onClick={handleNavClick}
-            className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.05] transition-all group"
+            className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.07] border border-slate-200 dark:border-white/[0.05] transition-all group"
           >
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#9AF04F] to-[#9655F5] p-[2px] shrink-0">
               <div className="w-full h-full rounded-full bg-[#0E1017] flex items-center justify-center text-white font-bold text-xs">
@@ -195,14 +195,14 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-white truncate group-hover:text-[#9AF04F] transition-colors">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-[#9AF04F] transition-colors">
                 {settings.studentProfile.name}
               </p>
-              <p className="text-[11px] text-slate-400 truncate">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {selectedSemester.name} • B.Tech
               </p>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
           </NavLink>
         </div>
       </aside>

@@ -30,14 +30,14 @@ export function MarksCalculatorModal({
     >
       <div className="space-y-6">
         {/* Navigation Tabs Pill Bar */}
-        <div className="p-1.5 rounded-full bg-[#141724] border border-white/[0.08] flex items-center justify-between gap-1 overflow-x-auto">
+        <div className="p-1.5 rounded-full bg-slate-100 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.08] flex items-center justify-between gap-1 overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab('internal')}
             className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               activeTab === 'internal'
                 ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.04]'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@ export function MarksCalculatorModal({
             className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               activeTab === 'endsem'
                 ? 'bg-[#9655F5] text-white shadow-purple-glow'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.04]'
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
@@ -62,8 +62,8 @@ export function MarksCalculatorModal({
             onClick={() => setActiveTab('overall')}
             className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               activeTab === 'overall'
-                ? 'bg-white text-[#0A0D06] shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-[#0A0D06] shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.04]'
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />

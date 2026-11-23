@@ -28,9 +28,13 @@ export function ThemeProvider({ children }) {
 
       if (isDark) {
         root.classList.add('dark');
+        root.classList.remove('light');
+        root.style.colorScheme = 'dark';
         setResolvedTheme('dark');
       } else {
         root.classList.remove('dark');
+        root.classList.add('light');
+        root.style.colorScheme = 'light';
         setResolvedTheme('light');
       }
     };

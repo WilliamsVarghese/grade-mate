@@ -39,47 +39,47 @@ export function SubjectDetailModal({
       <div className="space-y-5">
         {/* Top Highlight Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.06]">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Grade
             </span>
-            <span className="text-2xl font-black text-[#9AF04F]">
+            <span className="text-2xl font-black text-emerald-600 dark:text-[#9AF04F]">
               {subject.grade || '–'}
             </span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.06]">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Grade Point
             </span>
-            <span className="text-2xl font-black text-white">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
               {subject.gradePoint ?? 0}
             </span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.06]">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Total Score
             </span>
-            <span className="text-2xl font-black text-white">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
               {subject.totalMarks}
-              <span className="text-xs font-normal text-slate-400">
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
                 /{subject.maxMarks}
               </span>
             </span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#141724] border border-white/[0.06]">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.06]">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Percentage
             </span>
-            <span className="text-2xl font-black text-[#9AF04F]">
+            <span className="text-2xl font-black text-emerald-600 dark:text-[#9AF04F]">
               {subject.percentage}%
             </span>
           </div>
         </div>
 
         {/* Assessment Component Breakdown */}
-        <div className="p-4 rounded-2xl border border-white/[0.06] bg-[#141724] space-y-4">
+        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-[#141724] space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Assessment Breakdown
             </h4>
             <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ export function SubjectDetailModal({
                     onClose();
                     onOpenInternalCalc(subject.id);
                   }}
-                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] hover:bg-[#9AF04F]/25 transition-colors"
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#9AF04F]/15 text-emerald-800 dark:text-[#9AF04F] hover:bg-[#9AF04F]/25 transition-colors"
                 >
                   ⚡ Calc Internals
                 </button>
@@ -102,7 +102,7 @@ export function SubjectDetailModal({
                     onClose();
                     onOpenEndSemCalc(subject.id);
                   }}
-                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#9655F5]/20 text-[#C084FC] hover:bg-[#9655F5]/30 transition-colors"
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-[#9655F5]/20 text-purple-700 dark:text-[#C084FC] hover:bg-[#9655F5]/30 transition-colors"
                 >
                   🎓 Calc End-Sem
                 </button>
@@ -114,7 +114,7 @@ export function SubjectDetailModal({
           <div>
             <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-slate-300">
+                <span className="text-slate-700 dark:text-slate-300">
                   Internal Assessment (CIA)
                 </span>
                 {onOpenInternalCalc && (
@@ -124,20 +124,20 @@ export function SubjectDetailModal({
                       onClose();
                       onOpenInternalCalc(subject.id);
                     }}
-                    className="text-[10px] font-bold text-[#9AF04F] hover:underline flex items-center gap-0.5"
+                    className="text-[10px] font-bold text-emerald-700 dark:text-[#9AF04F] hover:underline flex items-center gap-0.5"
                   >
                     ⚡ Calc CAT & Attd
                   </button>
                 )}
               </div>
-              <span className="text-white font-bold">
+              <span className="text-slate-900 dark:text-white font-bold">
                 {subject.ciaMarks} / {subject.ciaMax}{' '}
-                <span className="text-slate-400 font-normal">
+                <span className="text-slate-500 dark:text-slate-400 font-normal">
                   ({Math.round(((subject.ciaMarks || 0) / (subject.ciaMax || 50)) * 100)}%)
                 </span>
               </span>
             </div>
-            <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full bg-[#9AF04F] rounded-full shadow-neon-sm transition-all duration-500"
                 style={{
@@ -151,7 +151,7 @@ export function SubjectDetailModal({
           <div>
             <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-slate-300">
+                <span className="text-slate-700 dark:text-slate-300">
                   End-Semester Exam (ESE)
                 </span>
                 {onOpenEndSemCalc && (
@@ -161,20 +161,20 @@ export function SubjectDetailModal({
                       onClose();
                       onOpenEndSemCalc(subject.id);
                     }}
-                    className="text-[10px] font-bold text-[#9655F5] hover:underline flex items-center gap-0.5"
+                    className="text-[10px] font-bold text-purple-700 dark:text-[#9655F5] hover:underline flex items-center gap-0.5"
                   >
                     🎓 Scale & Cutoffs
                   </button>
                 )}
               </div>
-              <span className="text-white font-bold">
+              <span className="text-slate-900 dark:text-white font-bold">
                 {subject.eseMarks} / {subject.eseMax}{' '}
-                <span className="text-slate-400 font-normal">
+                <span className="text-slate-500 dark:text-slate-400 font-normal">
                   ({Math.round(((subject.eseMarks || 0) / (subject.eseMax || 50)) * 100)}%)
                 </span>
               </span>
             </div>
-            <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full bg-[#9655F5] rounded-full shadow-purple-glow transition-all duration-500"
                 style={{
@@ -185,9 +185,9 @@ export function SubjectDetailModal({
           </div>
 
           {/* Scheme Note */}
-          <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>Evaluation Scheme:</span>
-            <span className="font-semibold text-white capitalize">
+            <span className="font-semibold text-slate-900 dark:text-white capitalize">
               {subject.schemeType === 'weighted'
                 ? `Weighted Ratio (${subject.ciaWeight || 50}% CIA : ${subject.eseWeight || 50}% ESE)`
                 : 'Direct Marks Sum (CIA + ESE)'}
@@ -201,23 +201,23 @@ export function SubjectDetailModal({
           <div
             className={`p-4 rounded-2xl border ${
               attendanceAlert
-                ? 'bg-rose-500/10 border-rose-500/30'
-                : 'bg-[#141724] border-white/[0.06]'
+                ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-300 dark:border-rose-500/30'
+                : 'bg-slate-50 dark:bg-[#141724] border-slate-200 dark:border-white/[0.06]'
             }`}
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Attendance
               </span>
               <span
                 className={`text-xs font-bold ${
-                  attendanceAlert ? 'text-rose-400' : 'text-white'
+                  attendanceAlert ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
                 }`}
               >
                 {subject.attendance ?? '–'}%
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
               <div
                 className={`h-full rounded-full ${
                   attendanceAlert ? 'bg-rose-500' : 'bg-[#9AF04F]'
@@ -226,7 +226,7 @@ export function SubjectDetailModal({
               />
             </div>
             {attendanceAlert && (
-              <p className="text-[11px] text-rose-400 mt-2 flex items-center gap-1">
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-2 flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 Below mandatory 75% attendance threshold
               </p>
@@ -234,16 +234,16 @@ export function SubjectDetailModal({
           </div>
 
           {/* Progress */}
-          <div className="p-4 rounded-2xl bg-[#141724] border border-white/[0.06]">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-white/[0.06]">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Syllabus Covered
               </span>
-              <span className="text-xs font-bold text-[#9AF04F]">
+              <span className="text-xs font-bold text-emerald-600 dark:text-[#9AF04F]">
                 {subject.progress ?? '–'}%
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full rounded-full bg-[#9AF04F]"
                 style={{ width: `${subject.progress || 0}%` }}
@@ -256,7 +256,7 @@ export function SubjectDetailModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-white/[0.06]">
           <Button
             variant="dangerOutline"
             size="sm"

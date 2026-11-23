@@ -15,7 +15,7 @@ export function Layout() {
   const { addSubject, selectedSemesterId, selectedSemester } = useAcademic();
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-slate-100 flex flex-col antialiased selection:bg-[#9AF04F] selection:text-[#090D04]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#08090C] text-slate-900 dark:text-slate-100 flex flex-col antialiased selection:bg-[#9AF04F] selection:text-[#090D04] transition-colors duration-200">
       {/* Desktop Sidebar navigation */}
       <Sidebar
         mobileOpen={mobileSidebarOpen}

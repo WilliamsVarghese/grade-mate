@@ -96,12 +96,12 @@ export function Dashboard() {
               Academic Dashboard
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {settings.studentProfile.college}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Hi, {settings.studentProfile.name} • <span className="text-[#9AF04F]">{selectedSemester.name}</span>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Hi, {settings.studentProfile.name} • <span className="text-emerald-600 dark:text-[#9AF04F]">{selectedSemester.name}</span>
           </h1>
         </div>
 
@@ -126,7 +126,7 @@ export function Dashboard() {
       </div>
 
       {/* QUICK SEMESTER SWITCHER PILL BAR */}
-      <div className="p-1.5 rounded-2xl bg-[#11131B] border border-white/[0.08] shadow-card-dark flex items-center gap-1 overflow-x-auto custom-scrollbar">
+      <div className="p-1.5 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-card-dark flex items-center gap-1 overflow-x-auto custom-scrollbar">
         {semesters.map((sem) => {
           const isActive = sem.id === selectedSemesterId;
           const semMetric = allSemestersSGPA.find(s => s.id === sem.id);
@@ -138,14 +138,14 @@ export function Dashboard() {
               className={`flex-1 min-w-[95px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
                 isActive
                   ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
               }`}
             >
               <div className="flex items-center gap-1.5">
                 <span>{sem.name}</span>
                 {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#0A0D06]" />}
               </div>
-              <span className={`text-[10px] font-mono ${isActive ? 'text-[#0A0D06]/80' : 'text-slate-500'}`}>
+              <span className={`text-[10px] font-mono ${isActive ? 'text-[#0A0D06]/80' : 'text-slate-400 dark:text-slate-500'}`}>
                 {semMetric?.isEvaluated ? `${semMetric.sgpa} SGPA` : `${semMetric?.subjectsCount || 0} courses`}
               </span>
             </button>
@@ -244,53 +244,53 @@ export function Dashboard() {
 
       {/* 2. DYNAMIC SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-[#9AF04F]/40 transition-all text-left">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] hover:border-[#9AF04F]/40 shadow-sm dark:shadow-none transition-all text-left">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
             {selectedSemester.name} SGPA
           </p>
-          <p className="text-2xl font-black text-[#9AF04F] mt-1">
+          <p className="text-2xl font-black text-emerald-600 dark:text-[#9AF04F] mt-1">
             {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'}
-            <span className="text-xs font-bold text-slate-500"> / 10</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500"> / 10</span>
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15] shadow-sm dark:shadow-none transition-all text-left">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
             Cumulative CGPA
           </p>
-          <p className="text-2xl font-black text-white mt-1">
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}
-            <span className="text-xs font-bold text-slate-500"> / 10</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500"> / 10</span>
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15] shadow-sm dark:shadow-none transition-all text-left">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
             {selectedSemester.shortName} Credits
           </p>
-          <p className="text-2xl font-black text-white mt-1">
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {currentSemesterSGPA.totalCredits}
-            <span className="text-xs font-normal text-slate-400"> Credits</span>
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> Credits</span>
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15] shadow-sm dark:shadow-none transition-all text-left">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
             Enrolled Subjects
           </p>
-          <p className="text-2xl font-black text-white mt-1">
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {currentSemesterSubjects.length}
-            <span className="text-xs font-normal text-slate-400"> Courses</span>
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> Courses</span>
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#11131B] border border-white/[0.06] hover:border-white/[0.15] transition-all text-left">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15] shadow-sm dark:shadow-none transition-all text-left">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
             Average CIA Score
           </p>
-          <p className="text-2xl font-black text-[#9655F5] mt-1">
+          <p className="text-2xl font-black text-purple-600 dark:text-[#9655F5] mt-1">
             {avgCIA > 0 ? avgCIA : '—'}
-            <span className="text-xs font-normal text-slate-400"> / 50</span>
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> / 50</span>
           </p>
         </div>
       </div>
@@ -299,10 +299,10 @@ export function Dashboard() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Curriculum Streams for {selectedSemester.name}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Categorized course streams with dedicated credit and performance metrics
             </p>
           </div>
@@ -499,18 +499,18 @@ export function Dashboard() {
         </div>
 
         {/* SAVINGS GOALS → ACADEMIC TARGETS */}
-        <div className="rounded-3xl bg-[#11131B] border border-white/[0.07] p-6 sm:p-7 flex flex-col justify-between shadow-card-dark">
+        <div className="rounded-3xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.07] p-6 sm:p-7 flex flex-col justify-between shadow-sm dark:shadow-card-dark">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#9AF04F]/15 text-[#9AF04F] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#9AF04F]/15 text-emerald-800 dark:text-[#9AF04F] flex items-center justify-center">
                   <Target className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     Degree Milestones
                   </h3>
-                  <p className="text-[11px] text-slate-400">B.Tech CSE progress</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">B.Tech CSE progress</p>
                 </div>
               </div>
               <Badge color="neonOutline" size="xs">
@@ -520,60 +520,60 @@ export function Dashboard() {
 
             <div className="space-y-4">
               {/* Target 1: Degree Credits Completion */}
-              <div className="p-3.5 rounded-2xl bg-[#161824] border border-white/[0.05]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#161824] border border-slate-200 dark:border-white/[0.05]">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-semibold text-white">B.Tech Degree Credits</span>
-                  <span className="font-bold text-[#9AF04F]">{creditsPercentage}%</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">B.Tech Degree Credits</span>
+                  <span className="font-bold text-emerald-600 dark:text-[#9AF04F]">{creditsPercentage}%</span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/[0.08] overflow-hidden">
                   <div
                     className="h-full rounded-full bg-[#9AF04F] shadow-neon-sm transition-all duration-500"
                     style={{ width: `${creditsPercentage}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                   <span>Completed: <strong>{completedCredits}</strong></span>
                   <span>Target: <strong>{targetCredits} Credits</strong></span>
                 </div>
               </div>
 
               {/* Target 2: Honours Distinction CGPA ≥ 9.0 */}
-              <div className="p-3.5 rounded-2xl bg-[#161824] border border-white/[0.05]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#161824] border border-slate-200 dark:border-white/[0.05]">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-semibold text-white">Target CGPA (Honours)</span>
-                  <span className="font-bold text-[#9655F5]">
+                  <span className="font-semibold text-slate-900 dark:text-white">Target CGPA (Honours)</span>
+                  <span className="font-bold text-purple-600 dark:text-[#9655F5]">
                     {cumulativeCGPA.cgpa > 0 ? Math.round((cumulativeCGPA.cgpa / 9.0) * 100) : 0}%
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/[0.08] overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-[#9655F5] to-[#9AF04F] shadow-purple-glow transition-all duration-500"
                     style={{ width: `${Math.min(100, ((cumulativeCGPA.cgpa || 0) / 9.0) * 100)}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                   <span>Current: <strong>{cumulativeCGPA.cgpa > 0 ? cumulativeCGPA.cgpa : '—'}</strong></span>
                   <span>Goal: <strong>9.00 CGPA</strong></span>
                 </div>
               </div>
 
               {/* Target 3: Evaluated Semesters */}
-              <div className="p-3.5 rounded-2xl bg-[#161824] border border-white/[0.05]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#161824] border border-slate-200 dark:border-white/[0.05]">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-semibold text-white">Semesters Evaluated</span>
-                  <span className="font-bold text-emerald-400">
+                  <span className="font-semibold text-slate-900 dark:text-white">Semesters Evaluated</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     {cumulativeCGPA.evaluatedSemestersCount} / 8 Semesters
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/[0.08] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-emerald-400 transition-all duration-500"
+                    className="h-full rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-500"
                     style={{ width: `${Math.round((cumulativeCGPA.evaluatedSemestersCount / 8) * 100)}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                   <span>Status:</span>
-                  <span className={`font-bold ${cumulativeCGPA.isIncomplete ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className={`font-bold ${cumulativeCGPA.isIncomplete ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                     {cumulativeCGPA.isIncomplete ? 'Previous Semesters Pending' : 'Continuous Record'}
                   </span>
                 </div>
@@ -586,14 +586,14 @@ export function Dashboard() {
       {/* 5. DYNAMIC SUBJECTS LIST FOR ACTIVE SEMESTER */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Semester Subjects */}
-        <div className="lg:col-span-2 rounded-3xl bg-[#11131B] border border-white/[0.07] p-6 shadow-card-dark">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-4">
+        <div className="lg:col-span-2 rounded-3xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.07] p-6 shadow-sm dark:shadow-card-dark">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/[0.06] mb-4">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#9AF04F]" />
                 {selectedSemester.name} Subjects & Marks
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Curriculum courses, internal assessments, and end-sem evaluations
               </p>
             </div>
@@ -604,7 +604,7 @@ export function Dashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/semester-5')}
-                className="text-xs font-bold text-[#9AF04F] hover:underline hidden sm:inline"
+                className="text-xs font-bold text-emerald-700 dark:text-[#9AF04F] hover:underline hidden sm:inline"
               >
                 Manage All →
               </button>
@@ -614,14 +614,14 @@ export function Dashboard() {
           {currentSemesterSubjects.length === 0 ? (
             <div className="py-12 text-center text-slate-500">
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-bold text-white">No courses recorded for {selectedSemester.name}</p>
-              <p className="text-xs text-slate-400 mt-1 mb-4">Add your courses to track credits, internal marks, and SGPA.</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">No courses recorded for {selectedSemester.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">Add your courses to track credits, internal marks, and SGPA.</p>
               <Button variant="neon" size="sm" icon={Plus} onClick={() => setAddSubjectModalOpen(true)}>
                 Add Course to {selectedSemester.name}
               </Button>
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
               {currentSemesterSubjects.slice(0, 6).map((sub, idx) => {
                 const pastelVariants = [
                   'bg-[#D8F7E0] text-[#0F4725]',
@@ -635,7 +635,7 @@ export function Dashboard() {
                 return (
                   <div
                     key={sub.id}
-                    className="py-3.5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors rounded-xl px-2"
+                    className="py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors rounded-xl px-2"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${pastelStyle}`}>
@@ -643,28 +643,28 @@ export function Dashboard() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-white truncate">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {sub.name}
                           </p>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-400">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-400">
                             {sub.code || 'NO-CODE'}
                           </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-400">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-400">
                             {sub.credits} Credits
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           CIA: {sub.ciaMarks ?? 0}/{sub.ciaMax ?? 50} • ESE: {sub.eseMarks ?? 0}/{sub.eseMax ?? 50}
                         </p>
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-sm sm:text-base font-black text-[#9AF04F] block">
-                        +{sub.totalMarks ?? 0} <span className="text-xs font-normal text-slate-400">/ {sub.maxMarks ?? 100}</span>
+                      <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-[#9AF04F] block">
+                        +{sub.totalMarks ?? 0} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ {sub.maxMarks ?? 100}</span>
                       </span>
-                      <span className="text-[11px] font-bold text-slate-300">
-                        Grade: <span className="text-[#9AF04F]">{sub.grade || '—'}</span> ({sub.gradePoint ?? 0} GP)
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Grade: <span className="text-emerald-600 dark:text-[#9AF04F]">{sub.grade || '—'}</span> ({sub.gradePoint ?? 0} GP)
                       </span>
                     </div>
                   </div>

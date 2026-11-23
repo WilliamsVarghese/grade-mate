@@ -8,13 +8,13 @@ const VARIANTS = {
   primary:
     'bg-[#9AF04F] hover:bg-[#8DE840] text-[#0A0D06] font-bold shadow-neon-sm hover:shadow-neon-glow focus-visible:ring-[#9AF04F]',
   dark:
-    'bg-[#181B26] hover:bg-[#222636] active:bg-[#282C3E] text-slate-100 border border-white/[0.08] focus-visible:ring-slate-500',
+    'bg-slate-100 hover:bg-slate-200 dark:bg-[#181B26] dark:hover:bg-[#222636] active:bg-slate-300 dark:active:bg-[#282C3E] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-white/[0.08] focus-visible:ring-slate-500',
   secondary:
-    'bg-white/[0.07] hover:bg-white/[0.12] active:bg-white/[0.15] text-slate-200 border border-white/[0.06] focus-visible:ring-slate-400',
+    'bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.07] dark:hover:bg-white/[0.12] active:bg-slate-200 dark:active:bg-white/[0.15] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/[0.06] focus-visible:ring-slate-400',
   outline:
-    'border border-white/[0.15] hover:border-white/[0.3] hover:bg-white/[0.05] text-slate-200 focus-visible:ring-slate-400',
+    'border border-slate-300 dark:border-white/[0.15] hover:border-slate-400 dark:hover:border-white/[0.3] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-200 focus-visible:ring-slate-400',
   ghost:
-    'text-slate-400 hover:text-slate-100 hover:bg-white/[0.07] focus-visible:ring-slate-400',
+    'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.07] focus-visible:ring-slate-400',
   danger:
     'bg-rose-600 hover:bg-rose-500 text-white shadow-sm focus-visible:ring-rose-500 font-semibold',
   dangerOutline:
@@ -61,7 +61,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`inline-flex items-center justify-center transition-all duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090C] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] ${variantStyles} ${sizeStyles} ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#08090C] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] ${variantStyles} ${sizeStyles} ${className}`}
       {...props}
     >
       {loading && (

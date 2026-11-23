@@ -34,7 +34,7 @@ export function BottomNav({ onQuickAction }) {
 
   return (
     <div className="lg:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto">
-      <nav className="glass-panel bg-[#0F1118]/90 backdrop-blur-xl border border-white/[0.12] rounded-full p-2 flex items-center justify-between shadow-2xl">
+      <nav className="glass-panel bg-white/95 dark:bg-[#0F1118]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.12] rounded-full p-2 flex items-center justify-between shadow-2xl">
         {navItems.slice(0, 2).map((item) => {
           const Icon = item.icon;
           return (
@@ -47,7 +47,7 @@ export function BottomNav({ onQuickAction }) {
                 return `flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all relative ${
                   active
                     ? 'text-[#9AF04F] bg-[#9AF04F]/10'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`;
               }}
             >
@@ -87,7 +87,7 @@ export function BottomNav({ onQuickAction }) {
                 `flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all relative ${
                   isActive
                     ? 'text-[#9AF04F] bg-[#9AF04F]/10'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`
               }
             >

@@ -74,19 +74,19 @@ export function Elective() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.06]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#FFA07A]">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-[#FFA07A]">
               Specialized Elective
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#FFA07A]" />
-            <span className="text-xs text-slate-400">Professional Elective 2 Stream</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Professional Elective 2 Stream</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Elective – Operating System Security
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Dedicated academic section for advanced Operating System Security and cybersecurity elective modules.
           </p>
         </div>
@@ -131,46 +131,46 @@ export function Elective() {
           </p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-[#11131B] border border-white/[0.07] text-white shadow-card-dark">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white shadow-sm dark:shadow-card-dark">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Elective Credits
             </span>
-            <div className="w-8 h-8 rounded-full bg-white/[0.06] text-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-800 dark:text-white flex items-center justify-center">
               <Layers className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-4xl font-black text-white">
+          <div className="text-4xl font-black text-slate-900 dark:text-white">
             {electivePerformance.totalCredits}
           </div>
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
             Registered elective credit weight
           </p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-[#11131B] border border-white/[0.07] text-white shadow-card-dark">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white shadow-sm dark:shadow-card-dark">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Elective Modules
             </span>
             <div className="w-8 h-8 rounded-full bg-[#FFE7D9] text-[#682D0F] flex items-center justify-center font-bold">
               <Lock className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-4xl font-black text-white">
+          <div className="text-4xl font-black text-slate-900 dark:text-white">
             {electiveSubjects.length}
           </div>
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
             Segregated from regular semester core list
           </p>
         </div>
       </div>
 
       {/* Info notice */}
-      <div className="p-4 rounded-2xl bg-[#151824] border border-white/[0.06] flex items-start gap-3 text-xs text-slate-300">
+      <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#151824] border border-slate-200 dark:border-white/[0.06] flex items-start gap-3 text-xs text-slate-700 dark:text-slate-300">
         <Info className="w-4 h-4 text-[#FFA07A] shrink-0 mt-0.5" />
         <div>
-          <strong className="text-white">Elective Specialization Scope:</strong> This track isolates Operating System Security (PE-2) and cybersecurity modules so you can analyze your specialization mastery independently.
+          <strong className="text-slate-900 dark:text-white">Elective Specialization Scope:</strong> This track isolates Operating System Security (PE-2) and cybersecurity modules so you can analyze your specialization mastery independently.
         </div>
       </div>
 
@@ -183,19 +183,19 @@ export function Elective() {
             placeholder="Search elective courses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-xs sm:text-sm pl-11 pr-4 py-2.5 rounded-full bg-[#141724] border border-white/[0.08] text-white placeholder:text-slate-500 focus:outline-none focus:border-[#FFA07A]"
+            className="w-full text-xs sm:text-sm pl-11 pr-4 py-2.5 rounded-full bg-white dark:bg-[#141724] border border-slate-300 dark:border-white/[0.08] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-[#FFA07A]"
           />
         </div>
       </div>
 
       {/* Subjects Grid */}
       {filteredSubjects.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl border border-dashed border-white/[0.1] bg-[#11131B]/50">
-          <ShieldCheck className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-white">
+        <div className="p-12 text-center rounded-3xl border border-dashed border-slate-300 dark:border-white/[0.1] bg-slate-50/50 dark:bg-[#11131B]/50">
+          <ShieldCheck className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {searchTerm ? 'No matching elective courses' : 'No elective courses enrolled'}
           </h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4 max-w-sm mx-auto">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4 max-w-sm mx-auto">
             Add your Operating System Security elective module or lab to record internal CIA marks, external examination marks, and grade points.
           </p>
           <Button variant="neon" size="sm" icon={Plus} onClick={handleOpenAdd}>

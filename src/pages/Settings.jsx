@@ -96,18 +96,18 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Page Header */}
-      <div className="pb-4 border-b border-white/[0.06]">
+      <div className="pb-4 border-b border-slate-200 dark:border-white/[0.06]">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-bold uppercase tracking-wider text-[#9AF04F]">
             Settings & Security
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
-          <span className="text-xs text-slate-400">Configuration Ledger</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Configuration Ledger</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           Application Preferences & Regulations
         </h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Customize your academic profile, regulations, grading scales, and assessment weightages.
         </p>
       </div>
@@ -195,13 +195,13 @@ export function Settings() {
         <form onSubmit={handleAssessmentSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Evaluation Scheme Pattern
               </label>
               <select
                 value={assessmentForm.type}
                 onChange={(e) => setAssessmentForm({ ...assessmentForm, type: e.target.value })}
-                className="block w-full rounded-2xl border border-white/[0.08] text-sm py-2.5 px-4 bg-[#151824] text-white"
+                className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm py-2.5 px-4 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white"
               >
                 <option value="sum">Direct Addition (Obtained CIA + ESE / Max Marks)</option>
                 <option value="weighted">Weighted Ratio (Configurable percentage weight)</option>
@@ -288,7 +288,7 @@ export function Settings() {
         <form onSubmit={handleGradeScaleSubmit} className="space-y-4">
           <div className="overflow-x-auto">
             <table className="w-full text-xs sm:text-sm text-left">
-              <thead className="bg-[#151824] text-slate-400 uppercase text-[10px] font-bold tracking-wider">
+              <thead className="bg-slate-100 dark:bg-[#151824] text-slate-600 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="px-3 py-2.5 rounded-l-2xl">Letter Grade</th>
                   <th className="px-3 py-2.5">Min Percentage (%)</th>
@@ -297,15 +297,15 @@ export function Settings() {
                   <th className="px-3 py-2.5 text-right rounded-r-2xl">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-slate-200 dark:divide-white/[0.04]">
                 {gradeScale.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-white/[0.02]">
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
                     <td className="px-3 py-2.5">
                       <input
                         type="text"
                         value={item.grade}
                         onChange={(e) => handleGradeChange(idx, 'grade', e.target.value)}
-                        className="w-16 px-2.5 py-1 font-bold text-xs rounded-xl border border-white/[0.1] bg-[#141724] text-white"
+                        className="w-16 px-2.5 py-1 font-bold text-xs rounded-xl border border-slate-300 dark:border-white/[0.1] bg-slate-50 dark:bg-[#141724] text-slate-900 dark:text-white"
                       />
                     </td>
                     <td className="px-3 py-2.5">
@@ -315,7 +315,7 @@ export function Settings() {
                         max="100"
                         value={item.minPercentage}
                         onChange={(e) => handleGradeChange(idx, 'minPercentage', e.target.value)}
-                        className="w-20 px-2.5 py-1 text-xs rounded-xl border border-white/[0.1] bg-[#141724] text-white"
+                        className="w-20 px-2.5 py-1 text-xs rounded-xl border border-slate-300 dark:border-white/[0.1] bg-slate-50 dark:bg-[#141724] text-slate-900 dark:text-white"
                       />
                     </td>
                     <td className="px-3 py-2.5">
@@ -326,7 +326,7 @@ export function Settings() {
                         max="10"
                         value={item.gradePoint}
                         onChange={(e) => handleGradeChange(idx, 'gradePoint', e.target.value)}
-                        className="w-20 px-2.5 py-1 text-xs font-black text-[#9AF04F] rounded-xl border border-white/[0.1] bg-[#141724]"
+                        className="w-20 px-2.5 py-1 text-xs font-black text-[#9AF04F] rounded-xl border border-slate-300 dark:border-white/[0.1] bg-slate-50 dark:bg-[#141724]"
                       />
                     </td>
                     <td className="px-3 py-2.5">
@@ -334,7 +334,7 @@ export function Settings() {
                         type="text"
                         value={item.description}
                         onChange={(e) => handleGradeChange(idx, 'description', e.target.value)}
-                        className="w-full min-w-[120px] px-2.5 py-1 text-xs rounded-xl border border-white/[0.1] bg-[#141724] text-white"
+                        className="w-full min-w-[120px] px-2.5 py-1 text-xs rounded-xl border border-slate-300 dark:border-white/[0.1] bg-slate-50 dark:bg-[#141724] text-slate-900 dark:text-white"
                       />
                     </td>
                     <td className="px-3 py-2.5 text-right">
@@ -342,7 +342,7 @@ export function Settings() {
                         type="button"
                         onClick={() => handleDeleteGradeRow(idx)}
                         disabled={gradeScale.length <= 1}
-                        className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                        className="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/[0.05] hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors disabled:opacity-30 disabled:pointer-events-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -380,15 +380,15 @@ export function Settings() {
             className={`p-4 rounded-2xl border text-left flex items-center gap-3 transition-all ${
               theme === 'dark'
                 ? 'border-[#9AF04F] bg-[#9AF04F]/10 ring-1 ring-[#9AF04F]'
-                : 'border-white/[0.06] hover:bg-white/[0.04]'
+                : 'border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-[#181B26] text-[#9AF04F] flex items-center justify-center shadow-neon-sm">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#181B26] text-[#9AF04F] flex items-center justify-center shadow-sm dark:shadow-neon-sm">
               <Moon className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Fintech Dark</p>
-              <p className="text-xs text-slate-400">Near-black & neon</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Fintech Dark</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Near-black & neon</p>
             </div>
           </button>
 
@@ -398,15 +398,15 @@ export function Settings() {
             className={`p-4 rounded-2xl border text-left flex items-center gap-3 transition-all ${
               theme === 'system'
                 ? 'border-[#9AF04F] bg-[#9AF04F]/10 ring-1 ring-[#9AF04F]'
-                : 'border-white/[0.06] hover:bg-white/[0.04]'
+                : 'border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-[#181B26] text-slate-300 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#181B26] text-slate-600 dark:text-slate-300 flex items-center justify-center">
               <Laptop className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Device System</p>
-              <p className="text-xs text-slate-400">Sync with OS theme</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Device System</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sync with OS theme</p>
             </div>
           </button>
 
@@ -416,15 +416,15 @@ export function Settings() {
             className={`p-4 rounded-2xl border text-left flex items-center gap-3 transition-all ${
               theme === 'light'
                 ? 'border-[#9AF04F] bg-[#9AF04F]/10 ring-1 ring-[#9AF04F]'
-                : 'border-white/[0.06] hover:bg-white/[0.04]'
+                : 'border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-[#181B26] text-amber-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#181B26] text-amber-500 dark:text-amber-400 flex items-center justify-center">
               <Sun className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Light Mode</p>
-              <p className="text-xs text-slate-400">High contrast</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Light Mode</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">High contrast</p>
             </div>
           </button>
         </div>

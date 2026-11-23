@@ -20,7 +20,7 @@ export function Card({
       case 'glass':
         return 'glass-panel text-white';
       default:
-        return 'bg-[#11131B] dark:bg-[#11131B] text-slate-100 border border-white/[0.07] hover:border-white/[0.12] shadow-card-dark';
+        return 'bg-white dark:bg-[#11131B] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12] shadow-sm dark:shadow-card-dark';
     }
   };
 
@@ -37,7 +37,7 @@ export function Card({
             headerBorder
               ? isNeon
                 ? 'border-b border-black/10'
-                : 'border-b border-white/[0.06]'
+                : 'border-b border-slate-200 dark:border-white/[0.06]'
               : ''
           }`}
         >
@@ -45,7 +45,7 @@ export function Card({
             {title && (
               <h3
                 className={`text-base font-semibold tracking-tight ${
-                  isNeon ? 'text-[#0A0D06]' : 'text-slate-100'
+                  isNeon ? 'text-[#0A0D06]' : 'text-slate-900 dark:text-slate-100'
                 }`}
               >
                 {title}
@@ -54,7 +54,7 @@ export function Card({
             {subtitle && (
               <p
                 className={`text-xs mt-0.5 ${
-                  isNeon ? 'text-black/70' : 'text-slate-400'
+                  isNeon ? 'text-black/70' : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 {subtitle}

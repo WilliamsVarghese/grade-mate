@@ -27,7 +27,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-semibold text-slate-300 mb-1.5"
+          className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
         >
           {label}
           {required && <span className="text-[#9AF04F] ml-1">*</span>}
@@ -50,12 +50,12 @@ export function Input({
           max={max}
           step={step}
           disabled={disabled}
-          className={`block w-full rounded-2xl border text-sm transition-all outline-none py-2.5 px-4 bg-[#151824] text-white placeholder:text-slate-500 disabled:opacity-50 disabled:bg-[#0E1018] ${
+          className={`block w-full rounded-2xl border text-sm transition-all outline-none py-2.5 px-4 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:opacity-50 disabled:bg-slate-200 dark:disabled:bg-[#0E1018] ${
             Icon ? 'pl-10' : ''
           } ${suffix ? 'pr-12' : ''} ${
             error
               ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-              : 'border-white/[0.08] focus:border-[#9AF04F] focus:ring-1 focus:ring-[#9AF04F]'
+              : 'border-slate-300 dark:border-white/[0.08] focus:border-[#9AF04F] focus:ring-1 focus:ring-[#9AF04F]'
           }`}
           {...props}
         />

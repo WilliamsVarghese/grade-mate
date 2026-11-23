@@ -78,11 +78,11 @@ export function Semester5() {
       {/* 1. SIMPLE HEADER TITLED "Notes" */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Notes
           </h1>
           {notes.length > 0 && (
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-400">
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-slate-400">
               {notes.length}
             </span>
           )}
@@ -97,13 +97,13 @@ export function Semester5() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search your notes..."
-          className="w-full pl-11 pr-10 py-3 rounded-2xl bg-[#12141F] border border-white/[0.08] hover:border-white/[0.15] text-white placeholder:text-slate-500 focus:outline-none focus:border-[#9AF04F] text-sm shadow-md transition-colors"
+          className="w-full pl-11 pr-10 py-3 rounded-2xl bg-white dark:bg-[#12141F] border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-[#9AF04F] text-sm shadow-sm dark:shadow-md transition-colors"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={() => setSearchTerm('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 dark:hover:text-white p-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -114,9 +114,9 @@ export function Semester5() {
       <div className="max-w-xl mx-auto">
         <div
           onClick={handleOpenNewNote}
-          className="bg-[#12141F] hover:bg-[#151826] border border-white/[0.08] hover:border-white/[0.2] rounded-2xl px-5 py-3.5 flex items-center justify-between cursor-pointer shadow-md transition-all group"
+          className="bg-white hover:bg-slate-50 dark:bg-[#12141F] dark:hover:bg-[#151826] border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.2] rounded-2xl px-5 py-3.5 flex items-center justify-between cursor-pointer shadow-sm dark:shadow-md transition-all group"
         >
-          <span className="text-sm text-slate-400 group-hover:text-slate-300">
+          <span className="text-sm text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300">
             Take a note...
           </span>
           <span className="text-xs font-semibold text-[#9AF04F] bg-[#9AF04F]/10 px-2.5 py-1 rounded-lg">
@@ -127,12 +127,12 @@ export function Semester5() {
 
       {/* 4. NOTES DISPLAYED AS COMPACT CARDS IN RESPONSIVE GRID */}
       {filteredNotes.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl border border-dashed border-white/[0.08] max-w-md mx-auto my-8">
-          <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-white">
+        <div className="p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-white/[0.08] max-w-md mx-auto my-8">
+          <FileText className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             {searchTerm ? 'No matching notes found' : 'No notes yet'}
           </h3>
-          <p className="text-xs text-slate-400 mt-1 mb-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
             {searchTerm
               ? 'Try searching with different keywords.'
               : 'Add your study notes, formulas, quick reminders or coursework points.'}

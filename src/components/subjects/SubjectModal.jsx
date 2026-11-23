@@ -193,18 +193,18 @@ export function SubjectModal({
         </div>
 
         {/* Marks & Assessment Scheme */}
-        <div className="p-4 rounded-2xl border border-white/[0.06] bg-[#141724] space-y-3">
+        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-[#141724] space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Evaluation Pattern
             </span>
             <div className="flex items-center gap-1.5 text-xs">
-              <label className="text-slate-400 text-xs">Scheme:</label>
+              <label className="text-slate-500 dark:text-slate-400 text-xs">Scheme:</label>
               <select
                 name="schemeType"
                 value={formData.schemeType}
                 onChange={handleChange}
-                className="text-xs px-2.5 py-1 rounded-full border border-white/[0.1] bg-[#1B1E2E] text-white"
+                className="text-xs px-2.5 py-1 rounded-full border border-slate-300 dark:border-white/[0.1] bg-white dark:bg-[#1B1E2E] text-slate-900 dark:text-white"
               >
                 <option value="sum">Direct Sum (CIA + ESE)</option>
                 <option value="weighted">Weighted Ratio</option>
@@ -292,7 +292,7 @@ export function SubjectModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.06]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/[0.06]">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
