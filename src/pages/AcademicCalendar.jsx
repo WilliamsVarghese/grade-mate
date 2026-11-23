@@ -332,13 +332,24 @@ export function AcademicCalendar() {
       {/* 1. FIRST: THE CALENDAR */}
       <Card
         title="Calendar"
-        subtitle="Dates with neon green dots represent exams; purple dots represent assignments."
+        subtitle={
+          <div className="flex items-center gap-3 text-xs mt-1">
+            <span className="inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-[#9AF04F] shadow-sm" />
+              Exams
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-[#9655F5] shadow-sm" />
+              Assignments
+            </span>
+          </div>
+        }
         action={
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleToday}
-              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
+              className="text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
             >
               Today
             </button>
@@ -351,7 +362,7 @@ export function AcademicCalendar() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-bold text-slate-900 dark:text-white px-2 min-w-[110px] text-center">
+              <span className="text-xs font-bold text-slate-900 dark:text-white px-1.5 sm:px-2 min-w-[95px] sm:min-w-[110px] text-center">
                 {monthYearLabel}
               </span>
               <button

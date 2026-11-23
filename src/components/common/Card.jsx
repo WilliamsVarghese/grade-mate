@@ -52,13 +52,13 @@ export function Card({
               </h3>
             )}
             {subtitle && (
-              <p
+              <div
                 className={`text-xs mt-0.5 ${
                   isNeon ? 'text-black/70' : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 {subtitle}
-              </p>
+              </div>
             )}
           </div>
           {action && <div className="flex items-center gap-2">{action}</div>}
