@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -10,98 +10,148 @@ import {
   Circle,
   Edit2,
   Trash2,
-  Search,
+  Bell,
   BookOpen,
-  Sparkles,
-  AlertCircle,
-  FileText,
-  Filter,
-  Check,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { useAcademic } from '../context/AcademicContext';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Input } from '../components/common/Input';
-import { Select } from '../components/common/Select';
+import { notificationService } from '../services/notificationService';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const CATEGORIES = [
-  { id: 'all', label: 'All Events' },
-  { id: 'exam', label: 'Exams & CATs', color: 'neon' },
-  { id: 'assignment', label: 'Assignments', color: 'purple' },
-  { id: 'review', label: 'Labs & Reviews', color: 'peach' },
-  { id: 'milestone', label: 'Milestones & Holidays', color: 'blue' },
+const INITIAL_ASSIGNMENTS = [
+  {
+    id: 'asg-1',
+    title: 'Assignment 2 – Turing Machines & Complexity',
+    subject: 'Formal Languages & Automata (CS303)',
+    dueDate: '2026-11-24',
+    dueTime: '11:59 PM',
+    hasReminder: true,
+    reminderDate: '2026-11-24',
+    reminderTime: '18:00',
+    isCompleted: false,
+    notes: 'Solve problems 1 through 8 from Module 4 and upload PDF.',
+  },
+  {
+    id: 'asg-2',
+    title: 'Buffer Overflow Vulnerability Audit Report',
+    subject: 'Operating System Security (PE-CS411)',
+    dueDate: '2026-11-29',
+    dueTime: '05:00 PM',
+    hasReminder: true,
+    reminderDate: '2026-11-29',
+    reminderTime: '09:00',
+    isCompleted: false,
+    notes: 'Document exploit demonstration and defensive countermeasures.',
+  },
+  {
+    id: 'asg-3',
+    title: 'Mini Project Phase 1 Architecture Diagram',
+    subject: 'Mini Project (CS333)',
+    dueDate: '2026-12-02',
+    dueTime: '10:00 AM',
+    hasReminder: false,
+    reminderDate: '',
+    reminderTime: '',
+    isCompleted: false,
+    notes: 'Submit system block diagram and database schema.',
+  },
 ];
 
 export function AcademicCalendar() {
-  const { exams, addExam, updateExam, deleteExam, allSubjects, selectedSemester } = useAcademic();
+  const { exams, addExam, updateExam, deleteExam, allSubjects } = useAcademic();
 
-  // Current view date (year & month)
+  // 1. Calendar View Month & Selected Date
   const [currentDate, setCurrentDate] = useState(() => new Date());
-
-  // Selected date for filtering timeline (e.g. '2026-11-25')
   const [selectedDateStr, setSelectedDateStr] = useState(null);
 
-  // Active category filter
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // 2. Assignments state with LocalStorage
+  const [assignments, setAssignments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('grademate_assignments_v1');
+      return saved ? JSON.parse(saved) : INITIAL_ASSIGNMENTS;
+    } catch {
+      return INITIAL_ASSIGNMENTS;
+    }
+  });
 
-  // Search filter
-  const [searchQuery, setSearchQuery] = useState('');
+  useEffect(() => {
+    try {
+      localStorage.setItem('grademate_assignments_v1', JSON.stringify(assignments));
+    } catch (e) {
+      console.error('Failed to save assignments:', e);
+    }
+  }, [assignments]);
 
-  // Event modal state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState(null);
+  // Periodic reminder checker for assignments
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      const nowTime = `${hours}:${mins}`;
 
-  const [formData, setFormData] = useState({
+      assignments.forEach((asg) => {
+        if (asg.hasReminder && !asg.isCompleted && !asg.notified) {
+          if (asg.reminderDate === today && asg.reminderTime <= nowTime) {
+            notificationService.sendNotification(`Assignment Reminder: ${asg.title}`, {
+              body: `Due today at ${asg.dueTime} for ${asg.subject}.`,
+            });
+            setAssignments((prev) =>
+              prev.map((item) => (item.id === asg.id ? { ...item, notified: true } : item))
+            );
+          }
+        }
+      });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [assignments]);
+
+  // Modals state
+  const [examModalOpen, setExamModalOpen] = useState(false);
+  const [editingExam, setEditingExam] = useState(null);
+  const [examForm, setExamForm] = useState({
     subject: '',
-    type: 'Internal Assessment / CAT',
-    category: 'exam',
+    type: 'Series Test 1',
     date: '',
     time: '10:00 AM - 12:00 PM',
     venue: '',
     syllabus: '',
   });
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth(); // 0-indexed
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState(null);
+  const [assignmentForm, setAssignmentForm] = useState({
+    title: '',
+    subject: '',
+    dueDate: '',
+    dueTime: '11:59 PM',
+    hasReminder: false,
+    reminderDate: '',
+    reminderTime: '18:00',
+    notes: '',
+  });
 
-  // Today string in YYYY-MM-DD format
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
   const todayStr = useMemo(() => {
     const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }, []);
 
-  // Format month and year label (e.g. "November 2026")
   const monthYearLabel = useMemo(() => {
-    return currentDate.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
+    return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }, [currentDate]);
 
-  // Navigate months
-  const handlePrevMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
-
-  const handleJumpToToday = () => {
-    const now = new Date();
-    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
-    setSelectedDateStr(todayStr);
-  };
-
-  // Calendar matrix calculations
+  // Calendar Day Grid calculations
   const calendarDays = useMemo(() => {
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
@@ -109,320 +159,210 @@ export function AcademicCalendar() {
 
     const days = [];
 
-    // Trailing days from previous month
+    // Trailing days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const dayNum = prevMonthDays - i;
       const prevDate = new Date(year, month - 1, dayNum);
       const dateStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-      days.push({
-        dayNum,
-        dateStr,
-        isCurrentMonth: false,
-      });
+      days.push({ dayNum, dateStr, isCurrentMonth: false });
     }
 
-    // Days in current month
+    // Current month days
     for (let i = 1; i <= totalDaysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      days.push({
-        dayNum: i,
-        dateStr,
-        isCurrentMonth: true,
-      });
+      days.push({ dayNum: i, dateStr, isCurrentMonth: true });
     }
 
-    // Leading days from next month to complete row multiples of 7
+    // Next month days
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const nextDate = new Date(year, month + 1, i);
       const dateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      days.push({
-        dayNum: i,
-        dateStr,
-        isCurrentMonth: false,
-      });
+      days.push({ dayNum: i, dateStr, isCurrentMonth: false });
     }
 
     return days;
   }, [year, month]);
 
-  // Group events by date string (YYYY-MM-DD)
-  const eventsByDate = useMemo(() => {
-    const map = {};
-    exams.forEach((item) => {
-      const d = item.date;
-      if (!d) return;
-      if (!map[d]) map[d] = [];
-      map[d].push(item);
-    });
-    return map;
-  }, [exams]);
-
-  // Next upcoming major event
-  const nextEvent = useMemo(() => {
-    const upcoming = exams
-      .filter((e) => e.date && !e.isCompleted && e.date >= todayStr)
-      .sort((a, b) => a.date.localeCompare(b.date));
-    return upcoming[0] || null;
-  }, [exams, todayStr]);
-
-  // Days left calculation
-  const getDaysDiff = (targetDateStr) => {
-    if (!targetDateStr) return '';
-    const now = new Date(todayStr + 'T00:00:00');
-    const target = new Date(targetDateStr + 'T00:00:00');
-    const diffTime = target - now;
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays === -1) return 'Yesterday';
-    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
-    return `In ${diffDays} days`;
+  // Month navigation
+  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handleToday = () => {
+    setCurrentDate(new Date());
+    setSelectedDateStr(todayStr);
   };
 
-  // Filtered events list
-  const filteredEvents = useMemo(() => {
-    return exams.filter((e) => {
-      // Date filter
-      if (selectedDateStr && e.date !== selectedDateStr) {
-        return false;
-      }
-
-      // Category filter
-      if (selectedCategory !== 'all') {
-        const cat = e.category || (e.type?.toLowerCase().includes('assignment') ? 'assignment' : 'exam');
-        if (selectedCategory === 'milestone') {
-          if (cat !== 'milestone' && cat !== 'holiday') return false;
-        } else if (cat !== selectedCategory) {
-          return false;
-        }
-      }
-
-      // Search query filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const subMatch = (e.subject || '').toLowerCase().includes(q);
-        const typeMatch = (e.type || '').toLowerCase().includes(q);
-        const venueMatch = (e.venue || '').toLowerCase().includes(q);
-        const sylMatch = (e.syllabus || '').toLowerCase().includes(q);
-        return subMatch || typeMatch || venueMatch || sylMatch;
-      }
-
-      return true;
-    }).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  }, [exams, selectedDateStr, selectedCategory, searchQuery]);
-
-  // Open modal to add a new event
-  const handleOpenAdd = (preferredDate = null) => {
-    setEditingEvent(null);
-    setFormData({
+  // Exam actions
+  const handleOpenAddExam = (prefilledDate = null) => {
+    setEditingExam(null);
+    setExamForm({
       subject: allSubjects[0]?.name ? `${allSubjects[0].name} (${allSubjects[0].code})` : '',
-      type: 'Internal Assessment / CAT',
-      category: 'exam',
-      date: preferredDate || selectedDateStr || todayStr,
+      type: 'Series Test 1',
+      date: prefilledDate || selectedDateStr || todayStr,
       time: '10:00 AM - 12:00 PM',
       venue: 'Exam Hall B-204',
       syllabus: '',
     });
-    setModalOpen(true);
+    setExamModalOpen(true);
   };
 
-  // Open modal to edit existing event
-  const handleOpenEdit = (event) => {
-    setEditingEvent(event);
-    setFormData({
-      subject: event.subject || '',
-      type: event.type || 'Internal Assessment',
-      category: event.category || 'exam',
-      date: event.date || todayStr,
-      time: event.time || '10:00 AM - 12:00 PM',
-      venue: event.venue || '',
-      syllabus: event.syllabus || '',
+  const handleOpenEditExam = (exam) => {
+    setEditingExam(exam);
+    setExamForm({
+      subject: exam.subject || '',
+      type: exam.type || 'Series Test',
+      date: exam.date || todayStr,
+      time: exam.time || '10:00 AM - 12:00 PM',
+      venue: exam.venue || '',
+      syllabus: exam.syllabus || '',
     });
-    setModalOpen(true);
+    setExamModalOpen(true);
   };
 
-  // Submit modal form
-  const handleSaveEvent = (e) => {
+  const handleSaveExam = (e) => {
     e.preventDefault();
-    if (!formData.subject.trim()) return;
+    if (!examForm.subject.trim()) return;
 
-    if (editingEvent) {
-      updateExam(editingEvent.id, formData);
+    if (editingExam) {
+      updateExam(editingExam.id, examForm);
     } else {
-      addExam(formData);
+      addExam(examForm);
     }
-    setModalOpen(false);
+    setExamModalOpen(false);
   };
 
-  // Toggle completion
-  const handleToggleComplete = (event) => {
-    updateExam(event.id, { isCompleted: !event.isCompleted });
+  // Assignment actions
+  const handleOpenAddAssignment = (prefilledDate = null) => {
+    setEditingAssignment(null);
+    setAssignmentForm({
+      title: '',
+      subject: allSubjects[0]?.name ? `${allSubjects[0].name} (${allSubjects[0].code})` : '',
+      dueDate: prefilledDate || selectedDateStr || todayStr,
+      dueTime: '11:59 PM',
+      hasReminder: false,
+      reminderDate: prefilledDate || selectedDateStr || todayStr,
+      reminderTime: '18:00',
+      notes: '',
+    });
+    setAssignmentModalOpen(true);
   };
 
-  // Category badge styling helper
-  const getCategoryStyles = (category) => {
-    switch (category) {
-      case 'assignment':
-        return 'bg-purple-100 dark:bg-[#9655F5]/20 text-purple-700 dark:text-[#C084FC] border-purple-300 dark:border-[#9655F5]/30';
-      case 'review':
-        return 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30';
-      case 'holiday':
-        return 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/30';
-      case 'milestone':
-        return 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-500/30';
-      default:
-        return 'bg-emerald-100 dark:bg-[#9AF04F]/15 text-emerald-900 dark:text-[#9AF04F] border-emerald-300 dark:border-[#9AF04F]/30';
-    }
+  const handleOpenEditAssignment = (asg) => {
+    setEditingAssignment(asg);
+    setAssignmentForm({
+      title: asg.title || '',
+      subject: asg.subject || '',
+      dueDate: asg.dueDate || todayStr,
+      dueTime: asg.dueTime || '11:59 PM',
+      hasReminder: !!asg.hasReminder,
+      reminderDate: asg.reminderDate || todayStr,
+      reminderTime: asg.reminderTime || '18:00',
+      notes: asg.notes || '',
+    });
+    setAssignmentModalOpen(true);
   };
+
+  const handleSaveAssignment = async (e) => {
+    e.preventDefault();
+    if (!assignmentForm.title.trim()) return;
+
+    if (assignmentForm.hasReminder) {
+      if (notificationService.getPermission() === 'default') {
+        await notificationService.requestPermission();
+      }
+    }
+
+    if (editingAssignment) {
+      setAssignments((prev) =>
+        prev.map((item) => (item.id === editingAssignment.id ? { ...item, ...assignmentForm } : item))
+      );
+    } else {
+      const newAsg = {
+        ...assignmentForm,
+        id: 'asg-' + Date.now(),
+        isCompleted: false,
+        notified: false,
+      };
+      setAssignments((prev) => [newAsg, ...prev]);
+    }
+    setAssignmentModalOpen(false);
+  };
+
+  const handleDeleteAssignment = (id) => {
+    setAssignments((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleToggleAssignmentComplete = (id) => {
+    setAssignments((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, isCompleted: !item.isCompleted } : item))
+    );
+  };
+
+  // Filter exams/assignments if a date is selected
+  const displayedExams = useMemo(() => {
+    let list = [...exams];
+    if (selectedDateStr) {
+      list = list.filter((e) => e.date === selectedDateStr);
+    }
+    return list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  }, [exams, selectedDateStr]);
+
+  const displayedAssignments = useMemo(() => {
+    let list = [...assignments];
+    if (selectedDateStr) {
+      list = list.filter((a) => a.dueDate === selectedDateStr);
+    }
+    return list.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+  }, [assignments, selectedDateStr]);
 
   return (
-    <div className="space-y-6 pb-20 max-w-6xl mx-auto">
-      {/* 1. Header with Title & Action Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.06]">
+    <div className="space-y-6 pb-20 max-w-5xl mx-auto">
+      {/* Page Header */}
+      <div className="flex items-center justify-between pt-1">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#9AF04F]">
-              Academic Timetable & Deadlines
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#9AF04F]" />
-            <span className="text-xs text-slate-500 dark:text-slate-400">Semester Schedule Tracker</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Academic Calendar
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Track exam schedules, assignment due dates, lab vivas, university milestones, and holidays.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <Button
-            variant="dark"
-            size="sm"
-            onClick={handleJumpToToday}
-            icon={CalendarIcon}
-          >
-            Today
-          </Button>
-          <Button
-            variant="neon"
-            size="sm"
-            icon={Plus}
-            onClick={() => handleOpenAdd(selectedDateStr || todayStr)}
-          >
-            Add Academic Event
-          </Button>
-        </div>
-      </div>
-
-      {/* 2. Hero Countdown / Next Major Deadline Widget */}
-      {nextEvent && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#9AF04F] text-[#0A0D06] shadow-neon-glow relative overflow-hidden transition-all duration-300">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#0A0D06] text-[#9AF04F]">
-                  Next Deadline • {getDaysDiff(nextEvent.date)}
-                </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-black/10">
-                  {nextEvent.date}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[#0A0D06]">
-                {nextEvent.subject}
-              </h2>
-              <div className="flex items-center gap-3 text-xs font-bold text-[#0A0D06]/80 flex-wrap">
-                <span>{nextEvent.type}</span>
-                {nextEvent.time && <span>• {nextEvent.time}</span>}
-                {nextEvent.venue && <span>• {nextEvent.venue}</span>}
-              </div>
-              {nextEvent.syllabus && (
-                <p className="text-xs text-[#0A0D06]/90 font-medium max-w-2xl pt-1">
-                  Topics: {nextEvent.syllabus}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleToggleComplete(nextEvent)}
-                className="px-4 py-2 rounded-2xl bg-[#0A0D06] hover:bg-[#1A2010] text-[#9AF04F] text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Mark Completed
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Metric Badges Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-            Total Scheduled
-          </span>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-            {exams.length} <span className="text-xs font-normal text-slate-400">Events</span>
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-            Upcoming Exams
-          </span>
-          <p className="text-2xl font-black text-emerald-600 dark:text-[#9AF04F] mt-0.5">
-            {exams.filter((e) => !e.isCompleted && (e.category === 'exam' || e.type?.toLowerCase().includes('exam') || e.type?.toLowerCase().includes('assessment'))).length}
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-            Assignments & Tasks
-          </span>
-          <p className="text-2xl font-black text-purple-600 dark:text-[#C084FC] mt-0.5">
-            {exams.filter((e) => !e.isCompleted && (e.category === 'assignment' || e.type?.toLowerCase().includes('assignment'))).length}
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#11131B] border border-slate-200 dark:border-white/[0.06] shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-            Completed
-          </span>
-          <p className="text-2xl font-black text-slate-700 dark:text-slate-300 mt-0.5">
-            {exams.filter((e) => e.isCompleted).length}
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Semester exam timetable and assignment deadlines.
           </p>
         </div>
       </div>
 
-      {/* 4. Interactive Monthly Calendar Card */}
+      {/* 1. FIRST: THE CALENDAR */}
       <Card
-        title="Monthly Examination & Event Grid"
-        subtitle="Click any date to see scheduled evaluations or double-click to add a new event."
+        title="Calendar"
+        subtitle="Dates with neon green dots represent exams; purple dots represent assignments."
         action={
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handlePrevMonth}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
-              title="Previous Month"
+              onClick={handleToday}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              Today
             </button>
-            <span className="text-xs font-bold text-slate-900 dark:text-white min-w-[120px] text-center">
-              {monthYearLabel}
-            </span>
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
-              title="Next Month"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1 border border-slate-200 dark:border-white/[0.08] rounded-xl p-0.5">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
+                title="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs font-bold text-slate-900 dark:text-white px-2 min-w-[110px] text-center">
+                {monthYearLabel}
+              </span>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 transition-colors"
+                title="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         }
       >
@@ -432,7 +372,7 @@ export function AcademicCalendar() {
             {DAYS_OF_WEEK.map((d, idx) => (
               <div
                 key={d}
-                className={`py-2 text-[11px] font-bold uppercase tracking-wider ${
+                className={`py-1.5 text-[11px] font-bold uppercase tracking-wider ${
                   idx === 0 || idx === 6
                     ? 'text-rose-500/80 dark:text-rose-400'
                     : 'text-slate-500 dark:text-slate-400'
@@ -443,86 +383,55 @@ export function AcademicCalendar() {
             ))}
           </div>
 
-          {/* Calendar Day Cells */}
+          {/* Calendar Day Matrix */}
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {calendarDays.map((cell, idx) => {
-              const cellEvents = eventsByDate[cell.dateStr] || [];
+              const dayExams = exams.filter((e) => e.date === cell.dateStr);
+              const dayAssignments = assignments.filter((a) => a.dueDate === cell.dateStr);
               const isToday = cell.dateStr === todayStr;
               const isSelected = cell.dateStr === selectedDateStr;
-              const hasEvents = cellEvents.length > 0;
+              const hasEvents = dayExams.length > 0 || dayAssignments.length > 0;
 
               return (
                 <div
                   key={idx}
                   onClick={() => {
                     if (selectedDateStr === cell.dateStr) {
-                      setSelectedDateStr(null); // Toggle unselect
+                      setSelectedDateStr(null);
                     } else {
                       setSelectedDateStr(cell.dateStr);
                     }
                   }}
-                  onDoubleClick={() => handleOpenAdd(cell.dateStr)}
-                  className={`min-h-[56px] sm:min-h-[72px] p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${
+                  className={`min-h-[52px] sm:min-h-[64px] p-1.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
-                      ? 'border-[#9AF04F] bg-[#9AF04F]/10 ring-2 ring-[#9AF04F]/40 shadow-neon-sm'
+                      ? 'border-[#9AF04F] bg-[#9AF04F]/10 ring-2 ring-[#9AF04F]/40 shadow-sm'
                       : isToday
                       ? 'border-emerald-500/50 bg-emerald-500/5'
                       : cell.isCurrentMonth
                       ? 'border-slate-200 dark:border-white/[0.05] bg-white dark:bg-[#141724] hover:border-slate-300 dark:hover:border-white/[0.15]'
-                      : 'border-transparent bg-slate-50/50 dark:bg-white/[0.01] opacity-40 hover:opacity-80'
+                      : 'border-transparent bg-slate-50/40 dark:bg-white/[0.01] opacity-40 hover:opacity-70'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-xs sm:text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${
-                        isToday
-                          ? 'bg-[#9AF04F] text-[#0A0D06] font-black'
-                          : cell.isCurrentMonth
-                          ? 'text-slate-900 dark:text-white'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {cell.dayNum}
-                    </span>
+                  <span
+                    className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                      isToday
+                        ? 'bg-[#9AF04F] text-[#0A0D06] font-black'
+                        : cell.isCurrentMonth
+                        ? 'text-slate-900 dark:text-white'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {cell.dayNum}
+                  </span>
 
-                    {/* Quick Add indicator on hover */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenAdd(cell.dateStr);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded-md hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-500 transition-opacity hidden sm:block"
-                      title="Add event on this date"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                  {/* Event indicator badges / dots */}
+                  {/* Indicator Dots */}
                   {hasEvents && (
-                    <div className="flex items-center gap-1 mt-1 flex-wrap">
-                      {cellEvents.slice(0, 3).map((ev) => (
-                        <span
-                          key={ev.id}
-                          className={`w-2 h-2 rounded-full ${
-                            ev.isCompleted
-                              ? 'bg-slate-400'
-                              : ev.category === 'assignment'
-                              ? 'bg-purple-500'
-                              : ev.category === 'holiday'
-                              ? 'bg-rose-500'
-                              : ev.category === 'review'
-                              ? 'bg-amber-500'
-                              : 'bg-[#9AF04F]'
-                          }`}
-                          title={`${ev.subject} (${ev.type})`}
-                        />
-                      ))}
-                      {cellEvents.length > 3 && (
-                        <span className="text-[9px] font-bold text-slate-500 font-mono">
-                          +{cellEvents.length - 3}
-                        </span>
+                    <div className="flex items-center gap-1 mt-1">
+                      {dayExams.length > 0 && (
+                        <span className="w-2 h-2 rounded-full bg-[#9AF04F]" title={`${dayExams.length} Exam(s)`} />
+                      )}
+                      {dayAssignments.length > 0 && (
+                        <span className="w-2 h-2 rounded-full bg-[#9655F5]" title={`${dayAssignments.length} Assignment(s)`} />
                       )}
                     </div>
                   )}
@@ -530,321 +439,453 @@ export function AcademicCalendar() {
               );
             })}
           </div>
+
+          {/* Date Filter pill if day selected */}
+          {selectedDateStr && (
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-[#9AF04F]/10 border border-emerald-200 dark:border-[#9AF04F]/20 text-xs font-bold text-emerald-900 dark:text-[#9AF04F]">
+              <span>Showing timetable for: {selectedDateStr}</span>
+              <button
+                type="button"
+                onClick={() => setSelectedDateStr(null)}
+                className="underline hover:text-emerald-700 dark:hover:text-white"
+              >
+                Show All Dates
+              </button>
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* 5. Filter Chips & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-          {CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
-                  isActive
-                    ? 'bg-[#9AF04F] text-[#0A0D06] shadow-neon-sm'
-                    : 'bg-white dark:bg-[#141724] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search timetable..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs pl-10 pr-8 py-2 rounded-2xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#9AF04F]"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-0.5"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 6. Active Date Filter Indicator (if any) */}
-      {selectedDateStr && (
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 dark:bg-[#9AF04F]/10 border border-emerald-200 dark:border-[#9AF04F]/20 text-xs text-emerald-900 dark:text-[#9AF04F] font-bold">
-          <span className="flex items-center gap-1.5">
-            <CalendarIcon className="w-4 h-4" />
-            Filtering events for date: {selectedDateStr} ({getDaysDiff(selectedDateStr)})
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedDateStr(null)}
-            className="underline hover:text-emerald-700 dark:hover:text-white text-xs font-extrabold"
+      {/* 2. SECOND: SEMESTER EXAM TIME TABLE (With option to add exam dates) */}
+      <Card
+        title="Semester Exam Time Table"
+        subtitle="Manage upcoming internal tests, practicals, and university semester exam dates."
+        action={
+          <Button
+            variant="neon"
+            size="sm"
+            icon={Plus}
+            onClick={() => handleOpenAddExam(selectedDateStr || todayStr)}
           >
-            Show All Dates
-          </button>
-        </div>
-      )}
-
-      {/* 7. Timeline List of Scheduled Events */}
-      <div className="space-y-3">
-        {filteredEvents.length === 0 ? (
-          <div className="p-12 text-center rounded-3xl border border-dashed border-slate-300 dark:border-white/[0.1] bg-white/40 dark:bg-[#11131B]/40 max-w-md mx-auto my-6">
-            <CalendarIcon className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              {searchQuery || selectedDateStr
-                ? 'No matching events found'
-                : 'No academic events scheduled'}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
-              {searchQuery || selectedDateStr
-                ? 'Try clearing the search or date filter to see other events.'
-                : 'Add series tests, assignments, review dates or university exam schedules.'}
-            </p>
-            <Button
-              variant="neon"
-              size="sm"
-              icon={Plus}
-              onClick={() => handleOpenAdd(selectedDateStr || todayStr)}
-            >
-              Schedule Event
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredEvents.map((item) => {
-              const isPast = item.date && item.date < todayStr && !item.isCompleted;
-              const dateObj = item.date ? new Date(item.date + 'T00:00:00') : null;
-              const monthShort = dateObj
-                ? dateObj.toLocaleDateString('en-US', { month: 'short' })
-                : 'DATE';
-              const dayNum = dateObj ? dateObj.getDate() : '--';
-
-              return (
+            Add Exam Date
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          {displayedExams.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-white/[0.08] text-xs text-slate-500">
+              <CalendarIcon className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
+              <p className="font-bold text-slate-900 dark:text-white">No exam dates scheduled {selectedDateStr ? 'for this date' : ''}</p>
+              <p className="text-slate-500 mt-1 mb-3">Click "+ Add Exam Date" to schedule your series tests or final exam.</p>
+              <Button variant="neon" size="xs" icon={Plus} onClick={() => handleOpenAddExam(selectedDateStr || todayStr)}>
+                Add Exam Date
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {displayedExams.map((exam) => (
                 <div
-                  key={item.id}
-                  className={`p-4 sm:p-5 rounded-3xl border transition-all duration-200 flex items-start gap-4 ${
-                    item.isCompleted
-                      ? 'bg-slate-50/70 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.04] opacity-70'
-                      : 'bg-white dark:bg-[#11131B] border-slate-200 dark:border-white/[0.07] hover:border-[#9AF04F]/50 shadow-sm dark:shadow-card-dark'
-                  }`}
+                  key={exam.id}
+                  className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#151824] hover:border-[#9AF04F]/40 shadow-sm flex items-start justify-between gap-3 transition-all"
                 >
-                  {/* Left Calendar Date Block */}
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 border ${
-                      item.isCompleted
-                        ? 'bg-slate-100 dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.06] text-slate-400'
-                        : 'bg-emerald-50 dark:bg-[#9AF04F]/10 border-emerald-200 dark:border-[#9AF04F]/25 text-emerald-800 dark:text-[#9AF04F]'
-                    }`}
-                  >
-                    <span className="text-[10px] font-black uppercase leading-none tracking-wider">
-                      {monthShort}
-                    </span>
-                    <span className="text-lg font-black leading-none mt-1 text-slate-900 dark:text-white">
-                      {dayNum}
-                    </span>
-                  </div>
-
-                  {/* Center Event Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getCategoryStyles(
-                          item.category
-                        )}`}
-                      >
-                        {item.type || 'Evaluation'}
+                  <div className="flex items-start gap-3 min-w-0">
+                    {/* Date Block */}
+                    <div className="w-12 h-12 rounded-2xl bg-[#9AF04F]/10 border border-[#9AF04F]/20 text-emerald-800 dark:text-[#9AF04F] flex flex-col items-center justify-center shrink-0">
+                      <span className="text-[10px] font-black uppercase leading-none">
+                        {exam.date ? new Date(exam.date + 'T00:00:00').toLocaleString('default', { month: 'short' }) : 'EXAM'}
                       </span>
-
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.isCompleted
-                            ? 'bg-slate-100 dark:bg-white/[0.06] text-slate-500'
-                            : isPast
-                            ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
-                            : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        }`}
-                      >
-                        {item.isCompleted
-                          ? 'Done'
-                          : getDaysDiff(item.date)}
+                      <span className="text-base font-black leading-none mt-1 text-slate-900 dark:text-white">
+                        {exam.date ? new Date(exam.date + 'T00:00:00').getDate() : '--'}
                       </span>
                     </div>
 
-                    <h4
-                      className={`text-sm sm:text-base font-bold truncate ${
-                        item.isCompleted
-                          ? 'line-through text-slate-400 dark:text-slate-500'
-                          : 'text-slate-900 dark:text-white'
-                      }`}
-                      title={item.subject}
-                    >
-                      {item.subject}
-                    </h4>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-[#9AF04F]/15 text-emerald-900 dark:text-[#9AF04F]">
+                          {exam.type || 'Exam'}
+                        </span>
+                      </div>
 
-                    {/* Time & Venue meta */}
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex-wrap">
-                      {item.time && (
-                        <span className="flex items-center gap-1 font-medium">
-                          <Clock className="w-3.5 h-3.5 text-[#9AF04F]" />
-                          {item.time}
-                        </span>
-                      )}
-                      {item.venue && (
-                        <span className="flex items-center gap-1 font-medium">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          {item.venue}
-                        </span>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate mt-1" title={exam.subject}>
+                        {exam.subject}
+                      </h4>
+
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
+                        {exam.time && (
+                          <span className="flex items-center gap-1 font-medium">
+                            <Clock className="w-3 h-3 text-[#9AF04F]" />
+                            {exam.time}
+                          </span>
+                        )}
+                        {exam.venue && (
+                          <span className="flex items-center gap-1 font-medium">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            {exam.venue}
+                          </span>
+                        )}
+                      </div>
+
+                      {exam.syllabus && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-1">
+                          Syllabus: {exam.syllabus}
+                        </p>
                       )}
                     </div>
-
-                    {/* Syllabus / Notes */}
-                    {item.syllabus && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
-                        {item.syllabus}
-                      </p>
-                    )}
                   </div>
 
-                  {/* Right Actions */}
-                  <div className="flex flex-col items-center gap-1 shrink-0 -mr-1">
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleToggleComplete(item)}
-                      className={`p-1.5 rounded-xl transition-colors ${
-                        item.isCompleted
-                          ? 'text-emerald-600 dark:text-[#9AF04F] bg-emerald-500/10 hover:bg-emerald-500/20'
-                          : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]'
-                      }`}
-                      title={item.isCompleted ? 'Mark incomplete' : 'Mark completed'}
-                    >
-                      {item.isCompleted ? (
-                        <CheckCircle2 className="w-4 h-4 fill-current" />
-                      ) : (
-                        <Circle className="w-4 h-4" />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(item)}
+                      onClick={() => handleOpenEditExam(exam)}
                       className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
-                      title="Edit Event"
+                      title="Edit Exam Date"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-
                     <button
                       type="button"
-                      onClick={() => deleteExam(item.id)}
+                      onClick={() => deleteExam(exam.id)}
                       className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-                      title="Delete Event"
+                      title="Delete Exam Date"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
 
-      {/* 8. Add / Edit Event Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingEvent ? 'Edit Academic Event' : 'Schedule Academic Event'}
-        subtitle="Schedule internal examinations, university tests, deadlines, or project presentations."
-        maxWidth="max-w-xl"
+      {/* 3. THIRD: ASSIGNMENTS & NOTIFICATIONS (Simple configuration) */}
+      <Card
+        title="Assignments & Notifications"
+        subtitle="Manage upcoming assignments with optional notification alerts."
+        action={
+          <Button
+            variant="purple"
+            size="sm"
+            icon={Plus}
+            onClick={() => handleOpenAddAssignment(selectedDateStr || todayStr)}
+          >
+            Add Assignment
+          </Button>
+        }
       >
-        <form onSubmit={handleSaveEvent} className="space-y-4">
-          <Input
-            label="Event / Exam Title or Course"
-            placeholder="e.g. Internal Assessment 2 – Machine Learning"
-            value={formData.subject}
-            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-            required
-          />
+        <div className="space-y-3">
+          {displayedAssignments.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-white/[0.08] text-xs text-slate-500">
+              <Bell className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
+              <p className="font-bold text-slate-900 dark:text-white">No assignments recorded {selectedDateStr ? 'for this date' : ''}</p>
+              <p className="text-slate-500 mt-1 mb-3">Add assignments to track deadlines and receive notification alerts.</p>
+              <Button variant="purple" size="xs" icon={Plus} onClick={() => handleOpenAddAssignment(selectedDateStr || todayStr)}>
+                Add Assignment
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+              {displayedAssignments.map((asg) => (
+                <div
+                  key={asg.id}
+                  className={`py-3.5 flex items-start justify-between gap-3 transition-colors ${
+                    asg.isCompleted ? 'opacity-60' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    {/* Completion Checkbox */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAssignmentComplete(asg.id)}
+                      className={`mt-0.5 p-1 rounded-lg transition-colors shrink-0 ${
+                        asg.isCompleted
+                          ? 'text-[#9AF04F] bg-[#9AF04F]/10'
+                          : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                      title={asg.isCompleted ? 'Mark pending' : 'Mark submitted'}
+                    >
+                      {asg.isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 fill-current" />
+                      ) : (
+                        <Circle className="w-5 h-5" />
+                      )}
+                    </button>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4
+                          className={`text-sm font-bold truncate ${
+                            asg.isCompleted
+                              ? 'line-through text-slate-400 dark:text-slate-500'
+                              : 'text-slate-900 dark:text-white'
+                          }`}
+                        >
+                          {asg.title}
+                        </h4>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-[#9655F5]/20 text-purple-700 dark:text-[#C084FC]">
+                          {asg.subject}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
+                        <span className="flex items-center gap-1 font-medium">
+                          <Clock className="w-3.5 h-3.5 text-purple-500" />
+                          Due: {asg.dueDate} {asg.dueTime}
+                        </span>
+
+                        {asg.hasReminder ? (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-[#9AF04F] bg-emerald-50 dark:bg-[#9AF04F]/10 px-2 py-0.5 rounded-full">
+                            <Bell className="w-3 h-3" />
+                            Alert: {asg.reminderDate} at {asg.reminderTime}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-400">No alert set</span>
+                        )}
+                      </div>
+
+                      {asg.notes && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                          {asg.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditAssignment(asg)}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                      title="Edit Assignment"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAssignment(asg.id)}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                      title="Delete Assignment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* MODAL 1: ADD / EDIT EXAM DATE */}
+      <Modal
+        isOpen={examModalOpen}
+        onClose={() => setExamModalOpen(false)}
+        title={editingExam ? 'Edit Exam Date' : 'Add Semester Exam Date'}
+        subtitle="Schedule internal assessment tests, practicals, or end-semester exam dates."
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSaveExam} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Subject / Course <span className="text-[#9AF04F]">*</span>
+            </label>
+            <input
+              type="text"
+              list="exam-subjects-list"
+              value={examForm.subject}
+              onChange={(e) => setExamForm({ ...examForm, subject: e.target.value })}
+              placeholder="e.g. Machine Learning (CS305)"
+              className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm py-2.5 px-4 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F]"
+              required
+            />
+            <datalist id="exam-subjects-list">
+              {allSubjects.map((s) => (
+                <option key={s.id} value={`${s.name} (${s.code || 'CS'})`} />
+              ))}
+            </datalist>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Category
+                Exam Type
               </label>
               <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={examForm.type}
+                onChange={(e) => setExamForm({ ...examForm, type: e.target.value })}
                 className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm py-2.5 px-4 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F]"
               >
-                <option value="exam">Internal Assessment / Exam</option>
-                <option value="assignment">Assignment Submission</option>
-                <option value="review">Lab / Project Review</option>
-                <option value="milestone">Academic Milestone</option>
-                <option value="holiday">Holiday / Vacation</option>
+                <option value="Series Test 1">Series Test 1 / CAT 1</option>
+                <option value="Series Test 2">Series Test 2 / CAT 2</option>
+                <option value="Model Practical Exam">Model Practical Exam</option>
+                <option value="End-Semester University Exam">End-Semester University Exam</option>
+                <option value="Lab Viva & Review">Lab Viva & Review</option>
               </select>
             </div>
 
             <Input
-              label="Evaluation Type / Tag"
-              placeholder="e.g. Series Test 2 / Viva"
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              label="Exam Date"
+              type="date"
+              value={examForm.date}
+              onChange={(e) => setExamForm({ ...examForm, date: e.target.value })}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              label="Date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              required
-            />
-            <Input
               label="Time"
               placeholder="e.g. 10:00 AM - 12:00 PM"
-              value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              value={examForm.time}
+              onChange={(e) => setExamForm({ ...examForm, time: e.target.value })}
+            />
+            <Input
+              label="Hall / Venue"
+              placeholder="e.g. Exam Hall B-204"
+              value={examForm.venue}
+              onChange={(e) => setExamForm({ ...examForm, venue: e.target.value })}
             />
           </div>
 
-          <Input
-            label="Venue / Classroom / Link"
-            placeholder="e.g. Exam Hall B-204 / Seminar Hall"
-            value={formData.venue}
-            onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-          />
-
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Syllabus / Notes / Topics
+              Syllabus / Topics to Revise (Optional)
             </label>
             <textarea
-              rows={3}
-              placeholder="Enter covered modules, topics to revise, or submission instructions..."
-              value={formData.syllabus}
-              onChange={(e) => setFormData({ ...formData, syllabus: e.target.value })}
-              className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm p-3.5 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F] resize-none"
+              rows={2}
+              placeholder="e.g. Modules 1 and 2, Unit Test formulas..."
+              value={examForm.syllabus}
+              onChange={(e) => setExamForm({ ...examForm, syllabus: e.target.value })}
+              className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm p-3 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F] resize-none"
             />
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/[0.06]">
-            <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
+            <Button variant="ghost" size="sm" onClick={() => setExamModalOpen(false)}>
               Cancel
             </Button>
             <Button variant="neon" size="sm" type="submit">
-              {editingEvent ? 'Save Changes' : 'Schedule Event'}
+              {editingExam ? 'Save Changes' : 'Add Exam Date'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL 2: ADD / EDIT ASSIGNMENT & NOTIFICATION */}
+      <Modal
+        isOpen={assignmentModalOpen}
+        onClose={() => setAssignmentModalOpen(false)}
+        title={editingAssignment ? 'Edit Assignment' : 'Add Assignment'}
+        subtitle="Set coursework assignment title, due date, and optional notification reminder."
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSaveAssignment} className="space-y-4">
+          <Input
+            label="Assignment Title"
+            placeholder="e.g. Assignment 2 – Problem Set 4"
+            value={assignmentForm.title}
+            onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })}
+            required
+          />
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Subject / Course
+            </label>
+            <select
+              value={assignmentForm.subject}
+              onChange={(e) => setAssignmentForm({ ...assignmentForm, subject: e.target.value })}
+              className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm py-2.5 px-4 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F]"
+            >
+              <option value="">General Assignment</option>
+              {allSubjects.map((s) => (
+                <option key={s.id} value={`${s.name} (${s.code || 'CS'})`}>
+                  {s.name} ({s.code || 'CS'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Due Date"
+              type="date"
+              value={assignmentForm.dueDate}
+              onChange={(e) => setAssignmentForm({ ...assignmentForm, dueDate: e.target.value })}
+              required
+            />
+            <Input
+              label="Due Time"
+              placeholder="e.g. 11:59 PM"
+              value={assignmentForm.dueTime}
+              onChange={(e) => setAssignmentForm({ ...assignmentForm, dueTime: e.target.value })}
+            />
+          </div>
+
+          {/* Simple Reminder / Notification Option */}
+          <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-[#9655F5]/10 border border-purple-200 dark:border-[#9655F5]/25 space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={assignmentForm.hasReminder}
+                onChange={(e) => setAssignmentForm({ ...assignmentForm, hasReminder: e.target.checked })}
+                className="w-4 h-4 rounded accent-[#9655F5] cursor-pointer"
+              />
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5 text-purple-600 dark:text-[#C084FC]" />
+                Set Notification Alert
+              </span>
+            </label>
+
+            {assignmentForm.hasReminder && (
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    Alert Date
+                  </span>
+                  <input
+                    type="date"
+                    value={assignmentForm.reminderDate}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, reminderDate: e.target.value })}
+                    className="w-full text-xs px-3 py-1.5 rounded-xl border border-purple-200 dark:border-white/[0.1] bg-white dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9655F5]"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    Alert Time
+                  </span>
+                  <input
+                    type="time"
+                    value={assignmentForm.reminderTime}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, reminderTime: e.target.value })}
+                    className="w-full text-xs px-3 py-1.5 rounded-xl border border-purple-200 dark:border-white/[0.1] bg-white dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9655F5]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Notes (Optional)
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Upload PDF to Classroom portal, max 5 pages..."
+              value={assignmentForm.notes}
+              onChange={(e) => setAssignmentForm({ ...assignmentForm, notes: e.target.value })}
+              className="block w-full rounded-2xl border border-slate-300 dark:border-white/[0.08] text-sm p-3 bg-slate-50 dark:bg-[#151824] text-slate-900 dark:text-white outline-none focus:border-[#9AF04F] resize-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/[0.06]">
+            <Button variant="ghost" size="sm" onClick={() => setAssignmentModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="purple" size="sm" type="submit">
+              {editingAssignment ? 'Save Changes' : 'Add Assignment'}
             </Button>
           </div>
         </form>
