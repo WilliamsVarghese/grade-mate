@@ -5,7 +5,6 @@ import { AcademicProvider } from './context/AcademicContext';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Semester5 } from './pages/Semester5';
-import { Minor } from './pages/Minor';
 import { Elective } from './pages/Elective';
 import { Performance } from './pages/Performance';
 import { Settings } from './pages/Settings';
@@ -21,7 +20,7 @@ export function App() {
               <Route path="semester-5" element={<Semester5 />} />
               <Route path="semesters" element={<Semester5 />} />
               <Route path="curriculum" element={<Semester5 />} />
-              <Route path="minor" element={<Minor />} />
+              <Route path="minor" element={<Navigate to="/" replace />} />
               <Route path="elective" element={<Elective />} />
               <Route path="performance" element={<Performance />} />
               <Route path="settings" element={<Settings />} />

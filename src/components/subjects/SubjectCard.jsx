@@ -33,11 +33,6 @@ export function SubjectCard({
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-700 dark:text-slate-300">
                 {subject.credits} Credits
               </span>
-              {subject.track && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBDDFB] text-[#3B1768]">
-                  Minor
-                </span>
-              )}
               {subject.electiveTrack && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFE7D9] text-[#682D0F]">
                   Elective

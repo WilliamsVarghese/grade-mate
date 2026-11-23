@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
-  Cpu,
   ShieldCheck,
   TrendingUp,
   Settings,
@@ -18,7 +17,6 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
   const {
     selectedSemester,
     currentSemesterSubjects,
-    minorSubjects,
     electiveSubjects,
     cumulativeCGPA,
     settings,
@@ -38,13 +36,6 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
       icon: BookOpen,
       badge: notes.length ? `${notes.length}` : undefined,
       badgeColor: 'bg-white/10 text-white',
-    },
-    {
-      to: '/minor',
-      label: 'Minor – IoT & Sensors',
-      icon: Cpu,
-      badge: `${minorSubjects.length}`,
-      badgeColor: 'bg-[#9655F5]/20 text-[#C084FC]',
     },
     {
       to: '/elective',

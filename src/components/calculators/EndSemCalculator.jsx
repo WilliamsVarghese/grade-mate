@@ -205,15 +205,6 @@ export function EndSemCalculator({
                     </option>
                   ))}
               </optgroup>
-              <optgroup label="Minor Track (IoT & Sensors)">
-                {allSubjects
-                  .filter(s => s.category === 'Minor Track')
-                  .map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code || 'Minor'})
-                    </option>
-                  ))}
-              </optgroup>
               <optgroup label="Elective Track (OS Security)">
                 {allSubjects
                   .filter(s => s.category === 'Elective Track')

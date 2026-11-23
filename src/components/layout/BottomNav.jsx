@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
-  Cpu,
   TrendingUp,
   Settings,
   Plus
@@ -27,7 +26,6 @@ export function BottomNav({ onQuickAction }) {
       icon: BookOpen,
       customActive: isCurriculumActive
     },
-    { to: '/minor', label: 'Minor', icon: Cpu },
     { to: '/performance', label: 'Analytics', icon: TrendingUp },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];

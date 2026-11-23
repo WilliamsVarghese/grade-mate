@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   GraduationCap,
   Sparkles,
-  Cpu,
   ShieldCheck,
   Target,
   Clock,
@@ -308,7 +307,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Pastel Mint Card: Current Semester Regular Core */}
           <div
             onClick={() => navigate('/semester-5')}
@@ -332,33 +331,6 @@ export function Dashboard() {
               <span>{currentSemesterSGPA.totalCredits} Credits</span>
               <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                 SGPA {currentSemesterSGPA.sgpa > 0 ? currentSemesterSGPA.sgpa : '—'} <ChevronRight className="w-4 h-4" />
-              </span>
-            </div>
-          </div>
-
-          {/* Pastel Purple Card: Minor in IoT and Sensors */}
-          <div
-            onClick={() => navigate('/minor')}
-            className="p-5 rounded-3xl bg-[#EBDDFB] text-[#3B1768] cursor-pointer hover:shadow-lg transition-all group relative overflow-hidden"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-white/70 text-[#3B1768] flex items-center justify-center shadow-xs">
-                <Cpu className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/60 text-[#3B1768]">
-                {minorSubjects.length} Courses
-              </span>
-            </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider opacity-80 block">
-              Specialization
-            </span>
-            <h3 className="text-lg font-black tracking-tight mt-0.5">
-              IoT & Sensors Minor
-            </h3>
-            <div className="mt-4 pt-3 border-t border-[#3B1768]/15 flex items-center justify-between text-xs font-bold">
-              <span>8 Credits</span>
-              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                GPA 8.63 <ChevronRight className="w-4 h-4" />
               </span>
             </div>
           </div>
