@@ -229,13 +229,13 @@ export function Dashboard() {
             <div className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => navigate('/performance')}
+                onClick={() => navigate('/calendar')}
                 className="w-12 h-12 rounded-full bg-[#0A0D06] hover:bg-[#1C2030] text-[#9AF04F] flex items-center justify-center transition-all shadow-md active:scale-95"
-                title="Performance Analytics"
+                title="Academic Calendar"
               >
-                <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+                <Calendar className="w-5 h-5 stroke-[2.5]" />
               </button>
-              <span className="text-[11px] font-bold text-[#0A0D06]">Analytics</span>
+              <span className="text-[11px] font-bold text-[#0A0D06]">Calendar</span>
             </div>
           </div>
         </div>
@@ -462,10 +462,10 @@ export function Dashboard() {
             </span>
             <button
               type="button"
-              onClick={() => navigate('/performance')}
+              onClick={() => navigate('/calendar')}
               className="text-[#9AF04F] hover:underline font-bold inline-flex items-center gap-1"
             >
-              Full Analytics Report <ChevronRight className="w-3.5 h-3.5" />
+              Academic Calendar <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

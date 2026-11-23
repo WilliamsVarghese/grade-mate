@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
-  TrendingUp,
+  Calendar,
   Settings,
   Plus
 } from 'lucide-react';
@@ -18,6 +18,10 @@ export function BottomNav({ onQuickAction }) {
     location.pathname === '/semester-5' ||
     location.pathname === '/curriculum';
 
+  const isCalendarActive =
+    location.pathname === '/calendar' ||
+    location.pathname === '/performance';
+
   const navItems = [
     { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
     { 
@@ -26,7 +30,12 @@ export function BottomNav({ onQuickAction }) {
       icon: BookOpen,
       customActive: isCurriculumActive
     },
-    { to: '/performance', label: 'Analytics', icon: TrendingUp },
+    { 
+      to: '/calendar', 
+      label: 'Calendar', 
+      icon: Calendar,
+      customActive: isCalendarActive
+    },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
 

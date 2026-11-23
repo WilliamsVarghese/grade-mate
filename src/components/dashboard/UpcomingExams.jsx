@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
@@ -16,6 +17,7 @@ import {
 import { useAcademic } from '../../context/AcademicContext';
 
 export function UpcomingExams() {
+  const navigate = useNavigate();
   const { exams, addExam, updateExam, deleteExam } = useAcademic();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -74,9 +76,18 @@ export function UpcomingExams() {
         title="Upcoming Exam Calendar"
         subtitle="Internal tests and end-semester dates"
         action={
-          <Button variant="neon" size="xs" icon={Plus} onClick={handleOpenAdd}>
-            Add
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => navigate('/calendar')}
+              className="text-xs font-bold text-emerald-700 dark:text-[#9AF04F] hover:underline px-2 py-1"
+            >
+              Calendar →
+            </button>
+            <Button variant="neon" size="xs" icon={Plus} onClick={handleOpenAdd}>
+              Add
+            </Button>
+          </div>
         }
       >
         <div className="space-y-3">

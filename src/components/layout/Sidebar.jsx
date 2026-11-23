@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   BookOpen,
   ShieldCheck,
-  TrendingUp,
+  Calendar,
   Settings,
   GraduationCap,
   Sparkles,
@@ -21,6 +21,7 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
     cumulativeCGPA,
     settings,
     notes = [],
+    exams = [],
   } = useAcademic();
 
   const navItems = [
@@ -45,10 +46,11 @@ export function Sidebar({ mobileOpen = false, setMobileOpen = () => { } }) {
       badgeColor: 'bg-[#FFE7D9]/15 text-[#FFA07A]',
     },
     {
-      to: '/performance',
-      label: 'Performance Analytics',
-      icon: TrendingUp,
-      accent: 'purple',
+      to: '/calendar',
+      label: 'Academic Calendar',
+      icon: Calendar,
+      badge: `${exams.length}`,
+      badgeColor: 'bg-[#9AF04F]/20 text-emerald-800 dark:text-[#9AF04F]',
     },
     {
       to: '/settings',
