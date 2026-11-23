@@ -156,10 +156,13 @@ export function Dashboard() {
       </div>
 
       {/* 1. HERO CARD: Account Balance → Current CGPA & Active Semester SGPA */}
-      <div className="relative rounded-3xl bg-[#9AF04F] text-[#0A0D06] p-6 sm:p-8 shadow-neon-glow overflow-hidden">
-        {/* Subtle decorative curved background overlay */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/20 blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 -mb-12 w-48 h-48 rounded-full bg-[#84cc16]/30 blur-xl pointer-events-none" />
+      <div className="relative rounded-3xl bg-[#9AF04F] text-[#0A0D06] p-6 sm:p-8 shadow-neon-glow overflow-hidden transition-all duration-300 hover:scale-[1.01] animate-subtle-float animate-neon-pulse">
+        {/* Subtle decorative curved background overlay with gentle organic motion */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/25 blur-2xl pointer-events-none animate-orb-float-1" />
+        <div className="absolute bottom-0 right-1/4 -mb-12 w-48 h-48 rounded-full bg-[#84cc16]/40 blur-xl pointer-events-none animate-orb-float-2" />
+        
+        {/* Animated sheen glare sweeping smoothly across */}
+        <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none animate-card-shimmer" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">

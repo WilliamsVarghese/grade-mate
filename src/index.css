@@ -55,3 +55,74 @@
   background: linear-gradient(135deg, #181126 0%, #251342 100%);
   border: 1px solid rgba(150, 85, 245, 0.25);
 }
+
+/* UI Card Animations */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px -5px rgba(154, 240, 79, 0.35), 0 0 15px rgba(154, 240, 79, 0.2);
+  }
+  50% {
+    box-shadow: 0 16px 45px 0px rgba(154, 240, 79, 0.55), 0 0 25px rgba(154, 240, 79, 0.35);
+  }
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3.5px);
+  }
+}
+
+@keyframes orbFloat1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(14px, -8px) scale(1.08);
+  }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-12px, 8px) scale(0.94);
+  }
+}
+
+@keyframes cardShimmer {
+  0% {
+    transform: translateX(-150%) skewX(-15deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  50%, 100% {
+    transform: translateX(250%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+.animate-neon-pulse {
+  animation: neonPulse 4s ease-in-out infinite;
+}
+
+.animate-subtle-float {
+  animation: subtleFloat 5s ease-in-out infinite;
+}
+
+.animate-orb-float-1 {
+  animation: orbFloat1 6s ease-in-out infinite;
+}
+
+.animate-orb-float-2 {
+  animation: orbFloat2 8s ease-in-out infinite;
+}
+
+.animate-card-shimmer {
+  animation: cardShimmer 6.5s ease-in-out infinite;
+}
