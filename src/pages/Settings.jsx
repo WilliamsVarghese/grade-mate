@@ -1,11 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Settings as SettingsIcon,
   User,
   Shield,
   Sliders,
-  Download,
-  Upload,
   RotateCcw,
   Trash2,
   CheckCircle2,
@@ -15,7 +13,6 @@ import {
   Laptop,
   Plus,
   Save,
-  FileJson
 } from 'lucide-react';
 import { useAcademic } from '../context/AcademicContext';
 import { useTheme } from '../context/ThemeContext';
@@ -35,8 +32,6 @@ export function Settings() {
     updateAssessmentScheme,
     resetToDefaults,
     clearAllData,
-    exportDataJSON,
-    importDataJSON,
   } = useAcademic();
 
   const { theme, setTheme } = useTheme();
@@ -54,9 +49,6 @@ export function Settings() {
 
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-  const [importStatus, setImportStatus] = useState(null);
-
-  const fileInputRef = useRef(null);
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
@@ -101,23 +93,6 @@ export function Settings() {
     setGradeScale((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        const result = importDataJSON(content);
-        setImportStatus(result);
-        setTimeout(() => setImportStatus(null), 4000);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Page Header */}
@@ -133,7 +108,7 @@ export function Settings() {
           Application Preferences & Regulations
         </h1>
         <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Customize your academic profile, regulations, grading scales, assessment weightages, and data backups.
+          Customize your academic profile, regulations, grading scales, and assessment weightages.
         </p>
       </div>
 
@@ -455,89 +430,7 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* 5. Data Backup & Restore (JSON Export & Import) */}
-      <Card
-        title="Academic Data Backup & Restore"
-        subtitle="Export full student records as JSON to save offline or restore onto another browser"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl border border-white/[0.06] bg-[#141724] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Download className="w-4 h-4 text-[#9AF04F]" />
-                  <h4 className="text-sm font-bold text-white">
-                    Export JSON Backup
-                  </h4>
-                </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Save all Semester 5 subjects, Minor, Elective, past semester records, and exam schedules to a downloadable JSON file.
-                </p>
-              </div>
-              <div className="mt-5">
-                <Button
-                  variant="neon"
-                  size="sm"
-                  icon={Download}
-                  onClick={exportDataJSON}
-                >
-                  Download Backup (.json)
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-white/[0.06] bg-[#141724] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Upload className="w-4 h-4 text-[#9655F5]" />
-                  <h4 className="text-sm font-bold text-white">
-                    Restore from JSON Backup
-                  </h4>
-                </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Upload a previously saved GradeMate JSON backup file to restore all academic records.
-                </p>
-              </div>
-              <div className="mt-5">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept=".json"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button
-                  variant="purple"
-                  size="sm"
-                  icon={Upload}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Upload JSON Backup
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {importStatus && (
-            <div
-              className={`p-3.5 rounded-2xl text-xs flex items-center gap-2 font-semibold ${
-                importStatus.success
-                  ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-rose-500/10 text-rose-300 border border-rose-500/30'
-              }`}
-            >
-              {importStatus.success ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
-              )}
-              {importStatus.message}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* 6. Danger Zone */}
+      {/* Danger Zone */}
       <Card
         title="Danger Zone"
         subtitle="Reset demo records or purge all application data from local storage"

@@ -19,7 +19,6 @@ import {
   Clock,
   Layers,
   ChevronRight,
-  Download,
   AlertCircle
 } from 'lucide-react';
 import { useAcademic } from '../context/AcademicContext';
@@ -56,7 +55,6 @@ export function Dashboard() {
     cumulativeCGPA,
     activities,
     settings,
-    exportDataJSON,
   } = useAcademic();
 
   const [addSubjectModalOpen, setAddSubjectModalOpen] = useState(false);
@@ -239,18 +237,6 @@ export function Dashboard() {
                 <TrendingUp className="w-5 h-5 stroke-[2.5]" />
               </button>
               <span className="text-[11px] font-bold text-[#0A0D06]">Analytics</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              <button
-                type="button"
-                onClick={exportDataJSON}
-                className="w-12 h-12 rounded-full bg-[#0A0D06] hover:bg-[#1C2030] text-[#9AF04F] flex items-center justify-center transition-all shadow-md active:scale-95"
-                title="Export 8-Semester Data Backup"
-              >
-                <Download className="w-5 h-5 stroke-[2.5]" />
-              </button>
-              <span className="text-[11px] font-bold text-[#0A0D06]">Backup</span>
             </div>
           </div>
         </div>
